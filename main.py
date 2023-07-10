@@ -74,8 +74,27 @@ def convert_timezone(time_first: str, timezone_first: str, timezone_second: str)
 #                 return date_str_with_preposition if date_str_with_preposition else date_str, date_obj.strftime("%Y-%m-%d %H:%M:%S")
 #     return None, None
 
+import datetime
+import re
+from dateutil import parser as dateparser
+
 def check_date_in_message(message):
     date_formats = [
+        r"\bзавтра\sв\s\d{1,2}:\d{2}\b",
+        r"\bпослезавтра\sв\s\d{1,2}:\d{2}\b",
+        r"\bзавтра\sна\s\d{1,2}:\d{2}\b",
+        r"\bпослезавтра\sна\s\d{1,2}:\d{2}\b",
+        r"\bпослезавтра\sв\s\d{1,2}-\d{2}\b",
+        r"\bзавтра\sв\s\d{1,2}-\d{2}\b",
+        r"\bв\s\d{1,2}\sчаса\sдня\b",
+        r"\bв\s\d{1,2}\sчаса\b",
+        r"\bв\s\d{1,2}\sчас\sдня\b",
+        r"\bв\s\d{1,2}\sчас\b",
+        r"\bв\s\d{1,2}\sчасов\b",
+        r"\b\d{1,2}\sчаса\b",
+        r"\bчас\sдня\b",
+        r"\bзавтра\b",
+        r"\bпослезавтра\b",
         r"\b\d{1,2}\.\d{1,2}\.\d{4}\s\d{1,2}:\d{2}\b",
         r"\b\d{1,2}\.\d{1,2}\.\d{2}\s\d{1,2}:\d{2}\b",
         r"\b\d{1,2}:\d{2}\b",
@@ -85,15 +104,6 @@ def check_date_in_message(message):
         r"\b\d{1,2}\.\d{1,2}\s\d{1,2}:\d{2}\b",
         r"\b\d{1,2}\.\d{1,2}\s\d{1,2}-\d{2}\b",
         r"\b\d{1,2}\s\w+\sв\s\d{1,2}:\d{2}\b",
-        r"\bв\s\d{1,2}\sчаса\sдня\b",
-        r"\bв\s\d{1,2}\sчаса\b",
-        r"\bв\s\d{1,2}\sчас\sдня\b",
-        r"\bв\s\d{1,2}\sчас\b",
-        r"\bв\s\d{1,2}\sчасов\b",
-        r"\b\d{1,2}\sчаса\b",
-        r"\bчас\sдня\b",
-        r"\bзавтра\b",
-        r"\bпослезавтра\b"
     ]
 
     prepositions = ['в', 'на']
@@ -105,7 +115,13 @@ def check_date_in_message(message):
             date_str = match.group(0)
             date_str_with_preposition = None
 
-            if "часа дня" in date_str or "час дня" in date_str:
+            if date_str.startswith('завтра') or date_str.startswith('послезавтра'):
+                # "tomorrow at" or "day after tomorrow at" case
+                days_shift = 1 if date_str.startswith('завтра') else 2
+                time_part = re.search(r'\d{1,2}[:-]\d{2}', date_str).group(0)
+                hour, minute = map(int, time_part.split(':')) if ':' in time_part else map(int, time_part.split('-'))
+                date_obj = (datetime.datetime.now() + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+            elif "часа дня" in date_str or "час дня" in date_str:
                 # special case where "часа дня" and "час дня" should be translated to time
                 hour = re.search(r'\d{1,2}', date_str)
                 if hour:
