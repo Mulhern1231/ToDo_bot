@@ -40,6 +40,14 @@ def convert_timezone(time_first: str, timezone_first: str, timezone_second: str)
     time_second = datetime_second.strftime("%Y-%m-%d %H:%M:%S")
     return time_second
 
+def days_declension(days):
+    if days % 10 == 1 and days % 100 != 11:
+        return str(days) + " день"
+    elif 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20):
+        return str(days) + " дня"
+    else:
+        return str(days) + " дней"
+    
 # def check_date_in_message(message):
 #     date_formats = [r"\b\d{1,2}\.\d{1,2}\.\d{4}\s\d{1,2}:\d{2}\b", 
 #                     r"\b\d{1,2}\.\d{1,2}\.\d{2}\s\d{1,2}:\d{2}\b", 
@@ -73,100 +81,63 @@ def convert_timezone(time_first: str, timezone_first: str, timezone_second: str)
 #                         break
 #                 return date_str_with_preposition if date_str_with_preposition else date_str, date_obj.strftime("%Y-%m-%d %H:%M:%S")
 #     return None, None
-
-import datetime
 import re
-from dateutil import parser as dateparser
+import datetime
+from dateparser import parse as dateparser_parse
 
 def check_date_in_message(message):
     date_formats = [
-        r"\bзавтра\sв\s\d{1,2}:\d{2}\b",
-        r"\bпослезавтра\sв\s\d{1,2}:\d{2}\b",
-        r"\bзавтра\sна\s\d{1,2}:\d{2}\b",
-        r"\bпослезавтра\sна\s\d{1,2}:\d{2}\b",
-        r"\bпослезавтра\sв\s\d{1,2}-\d{2}\b",
-        r"\bзавтра\sв\s\d{1,2}-\d{2}\b",
-        r"\bв\s\d{1,2}\sчаса\sдня\b",
-        r"\bв\s\d{1,2}\sчаса\b",
-        r"\bв\s\d{1,2}\sчас\sдня\b",
-        r"\bв\s\d{1,2}\sчас\b",
-        r"\bв\s\d{1,2}\sчасов\b",
-        r"\b\d{1,2}\sчаса\b",
-        r"\bчас\sдня\b",
-        r"\bзавтра\b",
-        r"\bпослезавтра\b",
-        r"\b\d{1,2}\.\d{1,2}\.\d{4}\s\d{1,2}:\d{2}\b",
-        r"\b\d{1,2}\.\d{1,2}\.\d{2}\s\d{1,2}:\d{2}\b",
+        r"\bзавтра в \d{1,2}:\d{2}\b",  # завтра в HH:MM
+        r"\bпослезавтра в \d{1,2}:\d{2}\b",  # послезавтра в HH:MM
+        r"\b\d{1,2}\.\d{1,2}\s\d{1,2}:\d{2}\b",  # DD.MM HH:MM
+        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\s\d{1,2}:\d{2}\b",  # DD (месяц словом) HH:MM
+        r"\b\d{1,2}\.\d{1,2}\s\d{1,2}-\d{2}\b",  # DD.MM HH-MM
+        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\b",  # DD (месяц словом)
+        r"\b\d{1,2}\.\d{1,2}\.\d{4}\s\d{1,2}:\d{2}\b", 
+        r"\b\d{1,2}\.\d{1,2}\.\d{2}\s\d{1,2}:\d{2}\b", 
         r"\b\d{1,2}:\d{2}\b",
         r"\b\d{1,2}\.\d{1,2}\.\d{4}\b",
         r"\b\d{1,2}\.\d{1,2}\.\d{2}\b",
         r"\b\d{1,2}-\d{2}\b",
-        r"\b\d{1,2}\.\d{1,2}\s\d{1,2}:\d{2}\b",
-        r"\b\d{1,2}\.\d{1,2}\s\d{1,2}-\d{2}\b",
-        r"\b\d{1,2}\s\w+\sв\s\d{1,2}:\d{2}\b",
+        r"\bзавтра\b",
+        r"\bпослезавтра\b"
     ]
 
-    prepositions = ['в', 'на']
-    current_year = datetime.datetime.now().year
+    prepositions = ['в', 'на'] 
 
     for date_format in date_formats:
         match = re.search(date_format, message)
         if match:
             date_str = match.group(0)
             date_str_with_preposition = None
-
-            if date_str.startswith('завтра') or date_str.startswith('послезавтра'):
-                # "tomorrow at" or "day after tomorrow at" case
-                days_shift = 1 if date_str.startswith('завтра') else 2
-                time_part = re.search(r'\d{1,2}[:-]\d{2}', date_str).group(0)
-                hour, minute = map(int, time_part.split(':')) if ':' in time_part else map(int, time_part.split('-'))
-                date_obj = (datetime.datetime.now() + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute, second=0, microsecond=0)
-            elif "часа дня" in date_str or "час дня" in date_str:
-                # special case where "часа дня" and "час дня" should be translated to time
-                hour = re.search(r'\d{1,2}', date_str)
-                if hour:
-                    hour = hour.group(0)
-                    hour = int(hour) + 12  # translating to PM
+            if date_str.startswith("завтра в"):
+                time_str = date_str.split(" в ")[1]
+                date_obj = datetime.datetime.now() + datetime.timedelta(days=1)
+                date_obj = date_obj.replace(hour=int(time_str.split(':')[0]), minute=int(time_str.split(':')[1]))
+            elif date_str.startswith("послезавтра в"):
+                time_str = date_str.split(" в ")[1]
+                date_obj = datetime.datetime.now() + datetime.timedelta(days=2)
+                date_obj = date_obj.replace(hour=int(time_str.split(':')[0]), minute=int(time_str.split(':')[1]))
+            elif date_str in ["завтра", "послезавтра"]:
+                if date_str == "завтра":
+                    date_obj = datetime.datetime.now() + datetime.timedelta(days=1)
                 else:
-                    hour = 13 if "час дня" in date_str else None
-                if hour is not None:
-                    date_obj = datetime.datetime.now().replace(hour=hour, minute=0, second=0, microsecond=0)
-                    if datetime.datetime.now() > date_obj:
-                        date_obj += datetime.timedelta(days=1)
-                else:
-                    continue
-            elif re.search(r'\d{1,2}\s\w+', date_str):
-                # DD Month case
-                date_obj = dateparser.parse(date_str)
-            elif re.search(r'\bв\s\d{1,2}\sчас', date_str):
-                # 'В час' case
-                hour = re.search(r'\d{1,2}', date_str).group(0)
-                date_obj = datetime.datetime.now().replace(hour=int(hour), minute=0, second=0, microsecond=0)
-                if datetime.datetime.now() > date_obj:
-                    date_obj += datetime.timedelta(days=1)
-            elif date_str.startswith('в'):
-                # 'В HH час(а/ов)' case
-                hour = re.search(r'\d{1,2}', date_str).group(0)
-                date_obj = datetime.datetime.now().replace(hour=int(hour), minute=0, second=0, microsecond=0)
-                if datetime.datetime.now() > date_obj:
-                    date_obj += datetime.timedelta(days=1)
+                    date_obj = datetime.datetime.now() + datetime.timedelta(days=2)
             else:
-                # Add current year if not specified
-                if re.search(r"\b\d{1,2}\.\d{1,2}\s\d{1,2}:\d{2}\b", date_str):
-                    date_str = f"{date_str}.{current_year}"
-                elif re.search(r"\b\d{1,2}\.\d{1,2}\s\d{1,2}-\d{2}\b", date_str):
-                    date_str = f"{date_str}.{current_year}"
-                date_obj = dateparser.parse(date_str)
-                if date_obj and datetime.datetime.now() > date_obj:
-                    date_obj += datetime.timedelta(days=1)
-
-            # Check for prepositions before date/time string
-            for preposition in prepositions:
-                preposition_with_space = ' ' + preposition + ' '
-                if preposition_with_space + date_str in message:
-                    date_str_with_preposition = preposition_with_space + date_str
-                    break
+                date_obj = dateparser_parse(date_str)
+                # Если date_obj is None, то пропустим итерацию
+                if date_obj is None:
+                    continue
+                # Если год не указан, добавим текущий
+                if date_obj.year == 1900:
+                    date_obj = date_obj.replace(year=datetime.datetime.now().year)
             if date_obj:
+                # Check for prepositions before date/time string
+                for preposition in prepositions:
+                    preposition_with_space = ' ' + preposition + ' '
+                    if preposition_with_space + date_str in message:
+                        date_str_with_preposition = preposition_with_space + date_str
+                        break
                 return date_str_with_preposition if date_str_with_preposition else date_str, date_obj.strftime("%Y-%m-%d %H:%M:%S")
     return None, None
 
@@ -210,6 +181,8 @@ def get_sorted_birthdays():
     today = datetime.datetime.now()
     birthday_data = []
     for user in users:
+        if user[4] == None:
+            continue
         birth_date = datetime.datetime.strptime(user[4], '%d.%m.%Y')  # Формат даты 'день.месяц.год'
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         if (birth_date.month, birth_date.day) >= (today.month, today.day):
@@ -489,7 +462,7 @@ def callback_inline(call):
 
         elif call.data.startswith("vi_edit_time_"):
             _,_,_, task_id = call.data.split("_")
-            bot.send_message(call.message.chat.id, "Введите новое время для задачи в формате DD-MM-YYYY HH:MM")
+            bot.send_message(call.message.chat.id, "📅 Пожалуйста, напиши дату и время задачи.")
             bot.register_next_step_handler(call.message, change_task_time, task_id)
         elif call.data.startswith("vi_edit_text_"):
             _,_,_, task_id = call.data.split("_")
@@ -567,6 +540,16 @@ def callback_inline(call):
             if action == "1hour":
                 new_deadline = datetime.datetime.now() + datetime.timedelta(hours=1)
                 bd.edit_task(task_id, new_deadline.strftime('%Y-%m-%d %H:%M:%S'))
+                
+                tas = bd.get_task(task_id)
+                tas_str = tas[3]
+                tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
+                difference = new_deadline - tas
+                day = days_declension(difference.days)
+                bd.edit_new_date(task_id, day)
+
+
+
 
                 # Получаем информацию о задаче
                 task = bd.get_task(task_id)
@@ -607,7 +590,15 @@ def callback_inline(call):
                 new_deadline = datetime.datetime.now() + datetime.timedelta(hours=3)
                 bd.edit_task(task_id, new_deadline.strftime('%Y-%m-%d %H:%M:%S'))
                 
-                                # Получаем информацию о задаче
+
+                tas = bd.get_task(task_id)
+                tas_str = tas[3]
+                tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
+                difference = new_deadline - tas
+                day = days_declension(difference.days)
+                bd.edit_new_date(task_id, day)
+
+                # Получаем информацию о задаче
                 task = bd.get_task(task_id)
                 task_text = task[2]
                 task_datetime = datetime.datetime.strptime(task[3], "%Y-%m-%d %H:%M:%S")  # Предполагается, что формат даты в БД "%Y-%m-%d %H:%M:%S"
@@ -645,7 +636,15 @@ def callback_inline(call):
                 new_deadline = datetime.datetime.now() + datetime.timedelta(days=1)
                 bd.edit_task(task_id, new_deadline.strftime('%Y-%m-%d %H:%M:%S'))
                 
-                                # Получаем информацию о задаче
+
+                tas = bd.get_task(task_id)
+                tas_str = tas[3]
+                tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
+                difference = new_deadline - tas
+                day = days_declension(difference.days)
+                bd.edit_new_date(task_id, day)
+
+                # Получаем информацию о задаче
                 task = bd.get_task(task_id)
                 task_text = task[2]
                 task_datetime = datetime.datetime.strptime(task[3], "%Y-%m-%d %H:%M:%S")  # Предполагается, что формат даты в БД "%Y-%m-%d %H:%M:%S"
@@ -717,7 +716,7 @@ def view_tasks_for_others(message, page=0, id=0):
             markup.add(types.InlineKeyboardButton("Вперед >>", callback_data="next_page"))
         bot.send_message(message.chat.id, f"📚 Список ваших коллег", reply_markup=markup)
     else:
-        bot.send_message(message.chat.id, "У вас нет коллег.")
+        bot.send_message(message.chat.id, "Нет задач для коллег")
 
 def view_type_tasks_for_others(message, colleague_id, page=0, call=None, user_start=0):
     colleague_id = int(colleague_id)
@@ -852,14 +851,23 @@ def change_task_time(message, task_id):
                 raise ValueError('Время уже прошло.')
         except ValueError:
             bot.send_message(chat_id, 'Произошла ошибка при анализе даты. Попробуйте еще раз.')
-            msg = bot.send_message(chat_id, 'Введите новое время для задачи в формате ЧЧ:ММ или ЧЧ-ММ. Вы можете также использовать "завтра" или "послезавтра" с указанием времени.')
+            msg = bot.send_message(chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
             bot.register_next_step_handler(msg, change_task_time, task_id)
             return
     else:
         bot.send_message(chat_id, 'Неверный формат даты. Попробуйте еще раз.')
-        msg = bot.send_message(chat_id, 'Введите новое время для задачи в формате ЧЧ:ММ или ЧЧ-ММ. Вы можете также использовать "завтра" или "послезавтра" с указанием времени.')
+        msg = bot.send_message(chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
         bot.register_next_step_handler(msg, change_task_time, task_id)
         return
+    
+    tas = bd.get_task(task_id)
+    tas_str = tas[3]
+    tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
+
+    difference = task_date - tas
+    day = days_declension(difference.days)
+
+    bd.edit_new_date(task_id, day)
 
     bd.edit_task(int(task_id), task_date)
     bot.send_message(chat_id, "Время задачи изменено")
@@ -1081,11 +1089,12 @@ def attach_file_markup():
 
 def edit_task(message, task_id):
     chat_id = message.chat.id
-    msg = bot.send_message(chat_id, 'Введите новую дату/время для задачи в формате \nДД.ММ.ГГГГ ЧЧ:ММ \nДД.ММ.ГГ ЧЧ:ММ \nЧЧ:ММ')
+    msg = bot.send_message(chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
     bot.register_next_step_handler(msg, edit_task_step, task_id)
     
 def edit_task_step(message, task_id):
     chat_id = message.chat.id
+
     current_time = datetime.datetime.now()
     date_str, task_date_str = check_date_in_message(message.text)
     if task_date_str:
@@ -1106,8 +1115,15 @@ def edit_task_step(message, task_id):
         msg = bot.send_message(chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
         bot.register_next_step_handler(msg, process_date_step, task_id)
         return
+    
+    tas = bd.get_task(task_id)
+    tas_str = tas[3]
+    tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
+    difference = task_date - tas
+    day = days_declension(difference.days)
 
     bd.edit_task(task_id, task_date)
+    bd.edit_new_date(task_id, day.replace('-',''))
 
     # Получаем информацию о задаче
     task = bd.get_task(task_id)
@@ -1275,7 +1291,7 @@ def update_profile(message, field):
             date_obj = datetime.datetime.strptime(date_obj_str, "%Y-%m-%d %H:%M:%S")
             bd.update_user_birth_date(message.chat.id, date_obj.strftime("%d.%m.%Y"))
         else:
-            bot.send_message(message.chat.id, "Не удалось найти дату в вашем сообщении. Пожалуйста, введите дату в формате DD.MM.YYYY")
+            bot.send_message(message.chat.id, "📅 Пожалуйста, напиши дату и время задачи.")
             return
     bot.send_message(message.chat.id, "Данные успешно обновлены!")
 
@@ -1426,6 +1442,9 @@ def create_new_recurring_task():
             print(task[0])
             task_id, user_id, task_text, deadline, _, file_id, timezone, user_id_added, new_date = task
 
+            if new_date[0].isdigit():
+                continue
+            
             new_task = bd.Task(user_id, task_text)
             new_task.set_file_id(file_id)
             new_task.set_timezone(timezone)

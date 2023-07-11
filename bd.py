@@ -162,6 +162,13 @@ def edit_task_text(task_id, new_text):
     conn.commit()
     conn.close()
 
+def edit_new_date(task_id, new_date):
+    conn = sqlite3.connect(bd_name)
+    cursor = conn.cursor()
+    cursor.execute('UPDATE tasks SET new_date = ? WHERE id = ?', (new_date, task_id))
+    conn.commit()
+    conn.close()
+
 def edit_task_timezone(task_id, new_timezone):
     conn = sqlite3.connect(bd_name)
     cursor = conn.cursor()
