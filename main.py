@@ -1038,10 +1038,12 @@ def process_file_step(message, task):
             markup.add(edit_btn, delete_btn)
 
 
-            bot.send_message(task.user_id, 
-                    text=f"🔋 Задача запланирована\n\n🔔 <b>{str(time_second)} </b>\n✏️ {str(task.text)}",
-                    parse_mode='HTML',
-                    reply_markup=markup)
+            # bot.send_message(chat_id, f"Задача: {task.text} \n\nДедлайн: {task.deadline}", reply_markup=markup)
+
+            bot.send_message(chat_id, 
+                            text=f"🔋 Задача запланирована\n\n🔔 <b>{str(task.deadline)} </b>\n✏️ {str(task.text)}",
+                            parse_mode='HTML',
+                            reply_markup=markup)
 
 
             # If the task is not for the sender
@@ -1058,10 +1060,9 @@ def process_file_step(message, task):
                     time_second = task.deadline
 
 
-                bot.send_message(task.user_id, 
-                                 text=f"🔋 Задача запланирована\n\n🔔 <b>{str(time_second)} </b>\n✏️ {str(task.text)}",
-                                 parse_mode='HTML',
-                                 reply_markup=markup)
+                bot.send_message(task.user_id, f"Задача: {task.text} \n\nДедлайн: {time_second}", reply_markup=markup)
+
+
     
 
             bot.send_message(message.chat.id, 'Выберите действие', reply_markup=main_menu_markup())
@@ -1082,12 +1083,12 @@ def save_file_id(message, task):
         
         task.timezone = bd.get_timezone_with_user_id(task.user_id)
         bd.add_task(task)
-        bot.send_message(chat_id, 'Файл сохранен. Задача создана.')
-
         bot.send_message(chat_id, 
                         text=f"🔋 Задача запланирована\n\n🔔 <b>{str(task.deadline)} </b>\n✏️ {str(task.text)}",
                         parse_mode='HTML',
                         reply_markup=main_menu_markup())
+
+
     except Exception as e:
         print(e)
         bot.reply_to(message, 'oooops')
