@@ -247,13 +247,13 @@ def city(message):
         timezone_str = tf.timezone_at(lat=location.latitude, lng=location.longitude)
         bd.update_timezone(message.chat.id, timezone_str)
         bot.send_message(message.chat.id, f"Ваш часовой пояс установлен на {timezone_str}")
+        if bd.get_user(message.chat.id)[6] is None:
+            sent = bot.send_message(message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
+            bot.register_next_step_handler(sent, update_morning_plan, True)
     else:
-        bot.send_message(message.chat.id, 'Не удалось определить город. Пожалуйста, попробуйте снова.')
+        sent = bot.send_message(message.chat.id, 'Не удалось определить город. Пожалуйста, попробуйте снова.')
+        bot.register_next_step_handler(sent, city)
 
-    
-    if bd.get_user(message.chat.id)[6] is None:
-        sent = bot.send_message(message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
-        bot.register_next_step_handler(sent, update_morning_plan, True)
 
 
 @bot.message_handler(commands=['menu'])
@@ -1038,7 +1038,10 @@ def process_file_step(message, task):
             markup.add(edit_btn, delete_btn)
 
 
-            bot.send_message(chat_id, f"Задача: {task.text} \n\nДедлайн: {task.deadline}", reply_markup=markup)
+            bot.send_message(task.user_id, 
+                    text=f"🔋 Задача запланирована\n\n🔔 <b>{str(time_second)} </b>\n✏️ {str(task.text)}",
+                    parse_mode='HTML',
+                    reply_markup=markup)
 
 
             # If the task is not for the sender
@@ -1055,7 +1058,10 @@ def process_file_step(message, task):
                     time_second = task.deadline
 
 
-                bot.send_message(task.user_id, f"Задача: {task.text} \n\nДедлайн: {time_second}", reply_markup=markup)
+                bot.send_message(task.user_id, 
+                                 text=f"🔋 Задача запланирована\n\n🔔 <b>{str(time_second)} </b>\n✏️ {str(task.text)}",
+                                 parse_mode='HTML',
+                                 reply_markup=markup)
     
 
             bot.send_message(message.chat.id, 'Выберите действие', reply_markup=main_menu_markup())
@@ -1077,7 +1083,11 @@ def save_file_id(message, task):
         task.timezone = bd.get_timezone_with_user_id(task.user_id)
         bd.add_task(task)
         bot.send_message(chat_id, 'Файл сохранен. Задача создана.')
-        bot.send_message(chat_id, f"Задача: {task.text} \n\nДедлайн: {task.deadline}", reply_markup=main_menu_markup())
+
+        bot.send_message(chat_id, 
+                        text=f"🔋 Задача запланирована\n\n🔔 <b>{str(task.deadline)} </b>\n✏️ {str(task.text)}",
+                        parse_mode='HTML',
+                        reply_markup=main_menu_markup())
     except Exception as e:
         print(e)
         bot.reply_to(message, 'oooops')
@@ -1307,14 +1317,22 @@ def update_morning_plan(message, new = False):
         server_timezone = config.TIMEZONE
         converted_time = convert_timezone(time_obj_str, user_timezone, server_timezone)
         bd.update_user_time_task_1(message.chat.id, converted_time)
+
+        if bd.get_user(message.chat.id)[7] is None:
+            new = True
+
         if new == False:
             bot.send_message(message.chat.id, f"☕️ Договорились! Я буду отправлять твой ежедневный список задач в {time_obj.strftime('%H:%M')}.")
+        else:
+            sent = bot.send_message(message.chat.id, "🍾 И последнее! Когда ты хочешь получать ежедневный отчет о проделанной работе за день? (например 21:00)")
+            bot.register_next_step_handler(sent, update_evening_report, True)
     else:
-        bot.send_message(message.chat.id, "Не удалось найти время в вашем сообщении. Пожалуйста, введите время в формате HH:MM")
-    
-    if bd.get_user(message.chat.id)[7] is None:
-        sent = bot.send_message(message.chat.id, "🍾 И последнее! Когда ты хочешь получать ежедневный отчет о проделанной работе за день? (например 21:00)")
-        bot.register_next_step_handler(sent, update_evening_report, True)
+        if new:
+            sent = bot.send_message(message.chat.id, "Не удалось найти время в вашем сообщении. Пожалуйста, введите время в формате HH:MM")
+            bot.register_next_step_handler(sent, update_morning_plan, True)
+        else:
+            sent = bot.send_message(message.chat.id, "Не удалось найти время в вашем сообщении. Пожалуйста, введите время в формате HH:MM")
+            bot.register_next_step_handler(sent, update_morning_plan)
 
 def update_evening_report(message, new = False):
     time_str, time_obj_str = check_date_in_message(message.text)
@@ -1326,22 +1344,26 @@ def update_evening_report(message, new = False):
         bd.update_user_time_task_2(message.chat.id, converted_time)
         if new == False:
             bot.send_message(message.chat.id, f"🍾 Хороший план! Теперь я буду отправлять отчет о выполненных задачах в {time_obj.strftime('%H:%M')}.")
+        else:
+            bot.send_message(message.chat.id, "💫 Отлично! Теперь я полностью готов к работе!")
+            bot.send_message(chat_id=message.chat.id, 
+                        text="🎮 *Гайд по работе с Workie_bot*\n"
+                            "1. Чтобы поставить задачу просто напиши *текст + время + дата*.\n"
+                            "Например: Сделать презентацию 23 июня 15:00;\n"
+                            "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду;\n"
+                            "3. Не забудь настроить время для получения ежедневных отчетов утром и вечером;\n"
+                            "4. В любом чате пиши @workie_bot и ставь задачи коллегам\n"
+                            "5. Если у тебя есть идеи/предложения для Workie_bot, смело пиши боту @workie_help_bot.\n\n"
+                            "Спасибо, что ты с Workie!",
+                        parse_mode='Markdown',
+                        reply_markup=main_menu_markup())
     else:
-        bot.send_message(message.chat.id, "Не удалось найти время в вашем сообщении. Пожалуйста, введите время в формате HH:MM")
-
-    if new == True:
-        bot.send_message(message.chat.id, "💫 Отлично! Теперь я полностью готов к работе!")
-        bot.send_message(chat_id=message.chat.id, 
-                    text="🎮 *Гайд по работе с Workie_bot*\n"
-                        "1. Чтобы поставить задачу просто напиши *текст + время + дата*.\n"
-                        "Например: Сделать презентацию 23 июня 15:00;\n"
-                        "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду;\n"
-                        "3. Не забудь настроить время для получения ежедневных отчетов утром и вечером;\n"
-                        "4. В любом чате пиши @workie_bot и ставь задачи коллегам\n"
-                        "5. Если у тебя есть идеи/предложения для Workie_bot, смело пиши боту @workie_help_bot.\n\n"
-                        "Спасибо, что ты с Workie!",
-                    parse_mode='Markdown',
-                    reply_markup=main_menu_markup())
+        if new:
+            sent = bot.send_message(message.chat.id, "Не удалось найти время в вашем сообщении. Пожалуйста, введите время в формате HH:MM")
+            bot.register_next_step_handler(sent, update_evening_report, True)
+        else:
+            sent = bot.send_message(message.chat.id, "Не удалось найти время в вашем сообщении. Пожалуйста, введите время в формате HH:MM")
+            bot.register_next_step_handler(sent, update_evening_report)
 
 
 #часовой пояс
