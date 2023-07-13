@@ -46,6 +46,9 @@ class Task:
 
     def set_new_date(self, new_date):
         self.new_date = new_date
+    
+    def set_text(self, text):
+        self.text = text
 
 def add_task(task):
     conn = sqlite3.connect(bd_name)
@@ -115,7 +118,7 @@ def get_user_id(username):
     conn = sqlite3.connect(bd_name)  
     cursor = conn.cursor()
 
-    cursor.execute("SELECT user_id FROM users WHERE username=?", (username,))
+    cursor.execute("SELECT user_id FROM users WHERE LOWER(username)=?", (username.lower(),))
     data = cursor.fetchone()
 
     cursor.close()
@@ -125,6 +128,7 @@ def get_user_id(username):
         return data[0]
     else:
         return None
+
 
 
 def get_tasks(user_id, status):
