@@ -114,6 +114,8 @@ def get_all_users():
     conn.close()
     return users
 
+
+
 def get_user_id(username):
     conn = sqlite3.connect(bd_name)  
     cursor = conn.cursor()
@@ -143,6 +145,16 @@ def get_tasks(user_id, status):
     tasks = rows
     conn.close()
     return tasks
+
+def get_all_tasks():
+    conn = sqlite3.connect(bd_name)  # Замените 'my_database.db' на имя вашей базы данных
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM tasks")  # Замените 'users' на имя вашей таблицы пользователей
+    users = cursor.fetchall()
+
+    conn.close()
+    return users
 
 def get_task(task_id):
     conn = sqlite3.connect(bd_name)

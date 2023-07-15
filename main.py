@@ -1870,7 +1870,6 @@ def create_new_recurring_task():
             bd.delete_task(task_id)
         time.sleep(60)
 
-
 def send_daily_task_summary():
     while True:
         # предположим, что эта функция возвращает всех пользователей из вашей базы данных
@@ -1893,7 +1892,7 @@ def send_daily_task_summary():
                 converted_time_datetime = datetime.datetime.strptime(
                     converted_time, "%Y-%m-%d %H:%M:%S")
 
-                if converted_time_datetime - datetime.timedelta(minutes=1) <= now <= converted_time_datetime + datetime.timedelta(minutes=1):
+                if converted_time_datetime - datetime.timedelta(seconds=20) <= now <= converted_time_datetime + datetime.timedelta(seconds=20):
                     view_tasks(None, status='pending', id=user_id)
             except:
                 pass
@@ -1913,10 +1912,40 @@ def send_daily_task_summary():
                 converted_time_datetime = converted_time_datetime.replace(
                     year=now.year, month=now.month, day=now.day)
 
-                if (converted_time_datetime - datetime.timedelta(minutes=1)).time() <= now.time() <= (converted_time_datetime + datetime.timedelta(minutes=1)).time():
+                if (converted_time_datetime - datetime.timedelta(seconds=20)).time() <= now.time() <= (converted_time_datetime + datetime.timedelta(seconds=20)).time():
                     task_done(user_id, page=0)
             except:
                 pass
+        time.sleep(60)
+
+def send_task_notification_60s():
+    while True:
+        tasks = bd.get_all_tasks()
+        for task in tasks:
+            task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
+
+            # Convert the deadline from the task's timezone to server's timezone
+            server_timezone = config.TIMEZONE
+            converted_deadline = convert_timezone(deadline, task_timezone, server_timezone)
+            converted_time_datetime = datetime.datetime.strptime(converted_deadline, "%Y-%m-%d %H:%M:%S")
+
+            now = datetime.datetime.now()
+
+            # Check if the current time is within the required range
+            if converted_time_datetime - datetime.timedelta(seconds=20) <= now <= converted_time_datetime + datetime.timedelta(seconds=20):
+                markup = types.InlineKeyboardMarkup(row_width=2)
+                one_hour = types.InlineKeyboardButton("1 час", callback_data=f'deadline|1hour|{task_id}')
+                three_hours = types.InlineKeyboardButton("3 часа", callback_data=f'deadline|3hours|{task_id}')
+                tomorrow = types.InlineKeyboardButton("Завтра", callback_data=f'deadline|tmrw|{task_id}')
+                other_time = types.InlineKeyboardButton("Другое время", callback_data=f'deadline|other|{task_id}')
+                done = types.InlineKeyboardButton("✅ Готово", callback_data=f'deadline|done|{task_id}')
+                markup.add(one_hour, three_hours, tomorrow, other_time, done)
+
+                bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
+            
+            print(converted_time_datetime - datetime.timedelta(seconds=20) <= now <= converted_time_datetime + datetime.timedelta(seconds=20), task_id, now, converted_time_datetime)
+        
+        # Sleep for 60 seconds (1 minute) before checking again
         time.sleep(60)
 
 
@@ -1925,13 +1954,16 @@ if __name__ == '__main__':
     thread2 = threading.Thread(target=send_task_notification)
     thread3 = threading.Thread(target=create_new_recurring_task)
     thread4 = threading.Thread(target=send_daily_task_summary)
+    thread5 = threading.Thread(target=send_task_notification_60s)
 
     thread1.start()
     thread2.start()
     thread3.start()
     thread4.start()
+    thread5.start()
 
     thread1.join()
     thread2.join()
     thread3.join()
     thread4.join()
+    thread5.join()
