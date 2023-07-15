@@ -79,22 +79,22 @@ def normal_date(date):
 
 
 def check_date_in_message(message):
+    message = message.lower()
+
     date_formats = [
-        # В/на (день недели) в HH(:MM)
-        r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\sв\s\d{1,2}(:\d{2})?\b",
+        r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\sв\s\d{1,2}(:\d{2})?\b",  # В/на (день недели) в HH(:MM)
         r"\bзавтра в \d{1,2}:\d{2}\b",  # завтра в HH:MM
         r"\bпослезавтра в \d{1,2}:\d{2}\b",  # послезавтра в HH:MM
+        r"\b(завтра|послезавтра) в \d{1,2}\b",  # NEW FORMAT
+        r"\b(завтра|послезавтра) на \d{1,2}\b",  # NEW FORMAT
         r"\b\d{1,2}\.\d{1,2}\sв\s\d{1,2}:\d{2}\b",  # NEW FORMAT
-        # NEW FORMAT
-        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\sв\s\d{1,2}:\d{2}\b",
+        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\sв\s\d{1,2}:\d{2}\b",  # NEW FORMAT
         r"\b\d{1,2}\.\d{1,2}\s\d{1,2}:\d{2}\b",  # DD.MM HH:MM
-        # DD (месяц словом) HH:MM
-        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\s\d{1,2}:\d{2}\b",
+        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\s\d{1,2}:\d{2}\b",  # DD (месяц словом) HH:MM
         r"\b\d{1,2}\.\d{1,2}\s\d{1,2}-\d{2}\b",  # DD.MM HH-MM
-        # DD (месяц словом)
-        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\b",
-        r"\b\d{1,2}\.\d{1,2}\.\d{4}\s\d{1,2}:\d{2}\b",
-        r"\b\d{1,2}\.\d{1,2}\.\d{2}\s\d{1,2}:\d{2}\b",
+        r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\b",  # DD (месяц словом)
+        r"\b\d{1,2}\.\d{1,2}\.\d{4}\s\d{1,2}:\d{2}\b", 
+        r"\b\d{1,2}\.\d{1,2}\.\d{2}\s\d{1,2}:\d{2}\b", 
         r"\b\d{1,2}:\d{2}\b",
         r"\b\d{1,2}\.\d{1,2}\.\d{4}\b",
         r"\b\d{1,2}\.\d{1,2}\.\d{2}\b",
@@ -102,15 +102,13 @@ def check_date_in_message(message):
         r"\bзавтра\b",
         r"\bпослезавтра\b",
         r"\bчерез\s(?:неделю|месяц|год|полгода)\b",
-        # В понедельник, Во вторник, и т.д.
-        r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\b",
+        r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\b",  # В понедельник, Во вторник, и т.д.
         r"\b(?:сегодня|завтра|послезавтра)\b",  # Сегодня, Завтра, Послезавтра
-        # Через N дней/недель/месяцев/лет
-        r"\bчерез\s(?:\d+|два|две|три|четыре|пять|шесть)\s(?:дней|недель|месяцев|лет|дня|недели|неделю|месяц|года|год)\b",
+        r"\bчерез\s(?:\d+|два|две|три|четыре|пять|шесть)\s(?:дней|недель|месяцев|лет|дня|недели|неделю|месяц|года|год)\b",  # Через N дней/недель/месяцев/лет
         r"\bв\s\d{1,2}\b"  # В 15
     ]
 
-    prepositions = ['в', 'на']
+    prepositions = ['в', 'на'] 
 
     for date_format in date_formats:
         match = re.search(date_format, message)
@@ -119,26 +117,25 @@ def check_date_in_message(message):
             date_str_with_preposition = None
             if re.match(r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\sв\s\d{1,2}(:\d{2})?\b", date_str):
                 # Обработка дней недели и времени
-                day_of_week_str, time_str = date_str.split()[
-                    1], date_str.split()[3]
-                days_of_week = ['понедельник', 'вторник', 'среду',
-                                'четверг', 'пятницу', 'субботу', 'воскресенье']
-                days_shift = days_of_week.index(
-                    day_of_week_str) - datetime.datetime.today().weekday()
+                day_of_week_str, time_str = date_str.split()[1], date_str.split()[3]
+                days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
+                days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
                 if days_shift < 0:
                     days_shift += 7
-                hour, minute = int(time_str.split(':')[0]), int(
-                    time_str.split(':')[1]) if ':' in time_str else 0
-                date_obj = (datetime.datetime.now(
-                ) + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute)
+                hour, minute = int(time_str.split(':')[0]), int(time_str.split(':')[1]) if ':' in time_str else 0
+                date_obj = (datetime.datetime.now() + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute)
+            elif re.match(r"\b(завтра|послезавтра) в \d{1,2}\b", date_str) or re.match(r"\b(завтра|послезавтра) на \d{1,2}\b", date_str):
+                # Обработка "завтра/послезавтра в HH" и "завтра/послезавтра на HH"
+                date_obj = dateparser_parse(date_str.replace(' в ', ' ').replace(' на ', ' ') +":00")
+                if date_obj is None:
+                    continue
             elif re.match(r"\b\d{1,2}\.\d{1,2}\sв\s\d{1,2}:\d{2}\b", date_str):
                 # Обработка "DD.MM в HH:MM"
                 date_obj = dateparser_parse(date_str)
                 if date_obj is None:
                     continue
                 if date_obj.year == 1900:
-                    date_obj = date_obj.replace(
-                        year=datetime.datetime.now().year)
+                    date_obj = date_obj.replace(year=datetime.datetime.now().year)
             elif re.match(r"\b\d{1,2}\s(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\sв\s\d{1,2}:\d{2}\b", date_str):
                 # Обработка "DD (месяц словом) в HH:MM"
                 date_str = date_str.replace(' в ', ' ')
@@ -148,13 +145,11 @@ def check_date_in_message(message):
             elif date_str.startswith("завтра в"):
                 time_str = date_str.split(" в ")[1]
                 date_obj = datetime.datetime.now() + datetime.timedelta(days=1)
-                date_obj = date_obj.replace(hour=int(time_str.split(
-                    ':')[0]), minute=int(time_str.split(':')[1]))
+                date_obj = date_obj.replace(hour=int(time_str.split(':')[0]), minute=int(time_str.split(':')[1]))
             elif date_str.startswith("послезавтра в"):
                 time_str = date_str.split(" в ")[1]
                 date_obj = datetime.datetime.now() + datetime.timedelta(days=2)
-                date_obj = date_obj.replace(hour=int(time_str.split(
-                    ':')[0]), minute=int(time_str.split(':')[1]))
+                date_obj = date_obj.replace(hour=int(time_str.split(':')[0]), minute=int(time_str.split(':')[1]))
             elif date_str in ["завтра", "послезавтра"]:
                 if date_str == "завтра":
                     date_obj = datetime.datetime.now() + datetime.timedelta(days=1)
@@ -163,10 +158,8 @@ def check_date_in_message(message):
             elif re.match(r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\b", date_str):
                 # Обработка дней недели
                 day_of_week_str = date_str.split()[1]
-                days_of_week = ['понедельник', 'вторник', 'среду',
-                                'четверг', 'пятницу', 'субботу', 'воскресенье']
-                days_shift = days_of_week.index(
-                    day_of_week_str) - datetime.datetime.today().weekday()
+                days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
+                days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
                 if days_shift < 0:
                     days_shift += 7
                 date_obj = datetime.datetime.now() + datetime.timedelta(days=days_shift)
@@ -181,37 +174,34 @@ def check_date_in_message(message):
             elif re.match(r"\bчерез\s(?:\d+|два|две|три|четыре|пять|шесть)\s(?:дней|недель|месяцев|лет|дня|недели|неделю|месяц|года|год)\b", date_str):
                 # Обработка "через N дней/недель/месяцев/лет"
                 time_shift_str = date_str.split()
-                numbers = {'один': 1,
-                           'два': 2,
-                           'две': 2,
-                           'три': 3,
-                           'четыре': 4,
-                           'пять': 5,
+                numbers = {'один': 1, 
+                           'два': 2, 
+                           'две': 2, 
+                           'три': 3, 
+                           'четыре': 4, 
+                           'пять': 5, 
                            'шесть': 6}
-                time_shift = int(time_shift_str[1]) if time_shift_str[1].isdigit(
-                ) else numbers[time_shift_str[1]]
-                time_shift_units = {'день': 'days',
-                                    'дней': 'days',
-                                    'дня': 'days',
-                                    'недель': 'weeks',
-                                    'неделю': 'weeks',
-                                    'недели': 'weeks',
-                                    'месяцев': 'months',
-                                    'месяц': 'months',
+                time_shift = int(time_shift_str[1]) if time_shift_str[1].isdigit() else numbers[time_shift_str[1]]
+                time_shift_units = {'день': 'days', 
+                                    'дней': 'days', 
+                                    'дня': 'days', 
+                                    'недель': 'weeks', 
+                                    'неделю': 'weeks', 
+                                    'недели': 'weeks', 
+                                    'месяцев': 'months', 
+                                    'месяц': 'months', 
                                     'лет': 'years',
                                     'года': 'years',
-                                    'год': 'years', }
+                                    'год': 'years',}
                 time_shift_unit = time_shift_units[time_shift_str[2]]
                 if time_shift_unit == 'days':
                     date_obj = datetime.datetime.now() + datetime.timedelta(days=time_shift)
                 elif time_shift_unit == 'weeks':
                     date_obj = datetime.datetime.now() + datetime.timedelta(weeks=time_shift)
                 elif time_shift_unit == 'months':
-                    date_obj = (datetime.datetime.now() +
-                                relativedelta(months=time_shift)).date()
+                    date_obj = (datetime.datetime.now() + relativedelta(months=time_shift)).date()
                 elif time_shift_unit == 'years':
-                    date_obj = (datetime.datetime.now() +
-                                relativedelta(years=time_shift)).date()
+                    date_obj = (datetime.datetime.now() + relativedelta(years=time_shift)).date()
             elif re.match(r"\bв\s\d{1,2}\b", date_str):
                 # Обработка "В 15"
                 hour_str = date_str.split()[1]
@@ -229,19 +219,17 @@ def check_date_in_message(message):
                 if time_shift_unit == 'weeks':
                     date_obj = datetime.datetime.now() + datetime.timedelta(weeks=time_shift)
                 elif time_shift_unit == 'months':
-                    date_obj = (datetime.datetime.now() +
-                                relativedelta(months=time_shift)).date()
+                    date_obj = (datetime.datetime.now() + relativedelta(months=time_shift)).date()
                 elif time_shift_unit == 'years':
-                    date_obj = (datetime.datetime.now() +
-                                relativedelta(years=time_shift)).date()
+                    date_obj = (datetime.datetime.now() + relativedelta(years=time_shift)).date()
+
 
             else:
                 date_obj = dateparser_parse(date_str)
                 if date_obj is None:
                     continue
                 if date_obj.year == 1900:
-                    date_obj = date_obj.replace(
-                        year=datetime.datetime.now().year)
+                    date_obj = date_obj.replace(year=datetime.datetime.now().year)
                 if re.match(r"\b\d{1,2}:\d{2}\b", date_str):
                     if date_obj.time() < datetime.datetime.now().time():
                         date_obj = date_obj + datetime.timedelta(days=1)
@@ -1574,20 +1562,18 @@ def handle_task(message):
                     chat_id = message.chat.id
                     task = bd.Task(chat_id, None)
 
-                if task_text.replace(str(date_str), '') != '':
-                    task.text = task_text
-                    task.set_user_id_added(message.from_user.id)
+                task.text = task_text
+                task.set_user_id_added(message.from_user.id)
 
-                    if task_date_str is None:
-                        bot.reply_to(
-                            message, '📅 Пожалуйста, напиши дату и время задачи.')
-                        bot.register_next_step_handler(
-                            "DATA" + message, handle_date, task)
-                    else:
-                        task_date = datetime.datetime.strptime(
-                            task_date_str, "%Y-%m-%d %H:%M:%S")
-                        task.set_deadline(task_date)
-                        process_task_step(message, task)
+                if task_date_str is None:
+                    bot.reply_to(
+                        message, '📅 Пожалуйста, напиши дату и время задачи.')
+                    bot.register_next_step_handler(message, handle_date, task)
+                else:
+                    task_date = datetime.datetime.strptime(
+                        task_date_str, "%Y-%m-%d %H:%M:%S")
+                    task.set_deadline(task_date)
+                    process_task_step(message, task)
         else:
             username = message.from_user.username
             bot.send_message(
@@ -1602,11 +1588,12 @@ def handle_date(message, task):
     # Если дата не найдена, просим пользователя указать ее еще раз
     if task_date_str is None:
         bot.reply_to(message, '📅 Пожалуйста, напиши дату и время задачи.')
-        bot.register_next_step_handler("DATA" + message, handle_date, task)
+        bot.register_next_step_handler(message, handle_date, task)
     else:
-        task_date = datetime.datetime.strptime(
-            task_date_str, "%Y-%m-%d %H:%M:%S")
-        task.set_deadline(task_date)
+        task_date = datetime.datetime.strptime(task_date_str, "%Y-%m-%d %H:%M:%S")
+        task.deadline = task_date
+
+        print(task.text, message)
         process_task_step(message, task)
 
 
