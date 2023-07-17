@@ -1583,7 +1583,7 @@ def handle_task(message):
 
 
 def handle_date(message, task):
-    date_str, task_date_str = check_date_in_message(message.text)
+    date_str, task_date_str = check_date_in_message("data" + str(message.text))
 
     # Если дата не найдена, просим пользователя указать ее еще раз
     if task_date_str is None:
@@ -1828,7 +1828,10 @@ def create_new_recurring_task():
             new_task.set_user_id_added(user_id_added)
             new_task.set_new_date(new_date)
 
-            if new_date.lower().startswith('каждую неделю'):
+            if new_date.lower().startswith('каждый день'):
+                new_deadline = datetime.datetime.strptime(
+                    deadline, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1)
+            elif new_date.lower().startswith('каждую неделю'):
                 new_deadline = datetime.datetime.strptime(
                     deadline, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(weeks=1)
             elif new_date.lower().startswith('каждый месяц'):
