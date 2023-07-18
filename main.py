@@ -1143,23 +1143,31 @@ def process_task_step(message, task=None):
         else:
             task_text = task.text
 
-        task_date_str, task_date = check_date_in_message(task_text)
+        if task.deadline == None:
+            task_date_str, task_date = check_date_in_message(task_text)
+            # Check for recurring task information in the text
+            recurring_task = check_recurring_in_message(task_text)
+            if recurring_task is not None:
+                task_text = task_text.replace(recurring_task, '')
+                task.text = task_text.strip()
+                recurring_task = recurring_task.split(' ')
+            if task_date is None:
+                bot.send_message(
+                    chat_id, 'Некорректный формат даты. Попробуйте еще раз.')
+                msg = bot.send_message(
+                    chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
+                bot.register_next_step_handler(msg, process_date_step, task)
+                return
 
-        # Check for recurring task information in the text
-        recurring_task = check_recurring_in_message(task_text)
-        if recurring_task is not None:
-            task_text = task_text.replace(recurring_task, '')
+            task_date_obj = datetime.datetime.strptime(
+                task_date, "%Y-%m-%d %H:%M:%S")
+            task.set_deadline(task_date)
+            if recurring_task is not None:
+                task.set_new_date(' '.join(recurring_task))
+
+            # Remove date from the task text
+            task_text = task_text.replace(task_date_str, "")
             task.text = task_text.strip()
-            recurring_task = recurring_task.split(' ')
-
-            # ... Ваш оригинальный код ...
-
-        if recurring_task is not None:
-            task.set_new_date(' '.join(recurring_task))
-
-        # Remove date from the task text
-        task_text = task_text.replace(task_date_str, "")
-        task.text = task_text.strip()
 
         # Directly proceed to save the task in the database
         task.timezone = bd.get_timezone_with_user_id(chat_id)
