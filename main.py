@@ -368,7 +368,7 @@ def city(message):
 
             timezone_info = pytz.timezone(timezone_str)
             timezone_name = timezone_info.zone
-            utc_offset = datetime.now(timezone_info).strftime('%z')
+            utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
 
             bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}")
             sent = bot.send_message(
@@ -377,7 +377,7 @@ def city(message):
         else:
             timezone_info = pytz.timezone(timezone_str)
             timezone_name = timezone_info.zone
-            utc_offset = datetime.now(timezone_info).strftime('%z')
+            utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
 
             bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=main_menu_markup())
     else:
@@ -1763,7 +1763,7 @@ def location(message):
 
         timezone_info = pytz.timezone(timezone_str)
         timezone_name = timezone_info.zone
-        utc_offset = datetime.now(timezone_info).strftime('%z')
+        utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
 
         bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=a)
 
@@ -1773,7 +1773,7 @@ def location(message):
     else:
         timezone_info = pytz.timezone(timezone_str)
         timezone_name = timezone_info.zone
-        utc_offset = datetime.now(timezone_info).strftime('%z')
+        utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
 
         bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=main_menu_markup())
 
