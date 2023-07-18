@@ -845,7 +845,7 @@ def callback_inline(call):
             elif action == "other":
                 msg = bot.send_message(
                     call.message.chat.id, '📅 Напиши дату и время нового дедлайна.')
-                bot.register_next_step_handler(msg, edit_task_step, task_id)
+                bot.register_next_step_handler(msg, edit_task_step, task_id, True)
             elif action == "done":
                 bd.set_task_done(task_id)
                 task = bd.get_task(task_id)
@@ -1183,10 +1183,23 @@ def process_task_step(message, task=None):
             'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
         markup.add(edit_btn, delete_btn)
 
-        bot.send_message(chat_id,
+
+        def hide_edit_button(chat_id, message_id, markup):
+            print("Test")
+            time.sleep(30)  # Wait for 30 seconds
+            print("ok")
+            markup = types.InlineKeyboardMarkup()
+            delete_btn = types.InlineKeyboardButton(
+                'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
+            markup.add(delete_btn)
+            bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
+
+        sent_message = bot.send_message(chat_id,
                          text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
                          parse_mode='HTML',
                          reply_markup=markup)
+    
+        threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
 
         # If the task is not for the sender
         if task.user_id != chat_id:
@@ -1249,10 +1262,25 @@ def process_date_step(message, task):
             'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
         markup.add(edit_btn, delete_btn)
 
-        bot.send_message(chat_id,
+
+        def hide_edit_button(chat_id, message_id, markup):
+            print("Test")
+            time.sleep(30)  # Wait for 30 seconds
+            print("ok")
+            markup = types.InlineKeyboardMarkup()
+            delete_btn = types.InlineKeyboardButton(
+                'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
+            markup.add(delete_btn)
+            bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
+
+        sent_message = bot.send_message(chat_id,
                          text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
                          parse_mode='HTML',
                          reply_markup=markup)
+    
+        threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
+
+        
 
         bot.send_message(chat_id, 'Выберите действие',
                          reply_markup=main_menu_markup())
@@ -1282,10 +1310,27 @@ def process_file_step(message, task):
                 'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
             markup.add(edit_btn, delete_btn)
 
-            bot.send_message(chat_id,
+
+
+            def hide_edit_button(chat_id, message_id, markup):
+                print("Test")
+                time.sleep(30)  # Wait for 30 seconds
+                print("ok")
+                markup = types.InlineKeyboardMarkup()
+                delete_btn = types.InlineKeyboardButton(
+                    'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
+                markup.add(delete_btn)
+                bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
+
+            sent_message = bot.send_message(chat_id,
                              text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
                              parse_mode='HTML',
                              reply_markup=markup)
+        
+            threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
+
+
+            
 
             # If the task is not for the sender
             if task.user_id != chat_id:
@@ -1343,12 +1388,11 @@ def attach_file_markup():
 
 def edit_task(message, task_id):
     chat_id = message.chat.id
-    msg = bot.send_message(
-        chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
-    bot.register_next_step_handler(msg, edit_task_step, task_id)
+    msg = bot.send_message(chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
+    bot.register_next_step_handler(msg, edit_task_step, task_id, False)
 
 
-def edit_task_step(message, task_id):
+def edit_task_step(message, task_id, remake = True):
     chat_id = message.chat.id
 
     current_time = datetime.datetime.now()
@@ -1373,8 +1417,7 @@ def edit_task_step(message, task_id):
             return
     else:
         bot.send_message(chat_id, 'Неверный формат даты. Попробуйте еще раз.')
-        msg = bot.send_message(
-            chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
+        msg = bot.send_message(chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
         bot.register_next_step_handler(msg, process_date_step, task_id)
         return
 
@@ -1417,13 +1460,23 @@ def edit_task_step(message, task_id):
     for eng, rus in weekdays.items():
         formatted_datetime = formatted_datetime.replace(eng, rus)
     if task[8] == None:
-        bot.send_message(chat_id=message.chat.id,
-                         text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
-                         parse_mode='HTML')
+        if remake == True:
+            bot.send_message(chat_id=message.chat.id,
+                            text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                            parse_mode='HTML')
+        else:
+            bot.send_message(chat_id=message.chat.id,
+                            text=f"✂️ Задача изменена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                            parse_mode='HTML')
     else:
-        bot.send_message(chat_id=message.chat.id,
-                         text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
-                         parse_mode='HTML')
+        if remake == True:
+            bot.send_message(chat_id=message.chat.id,
+                            text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                            parse_mode='HTML')
+        else:
+            bot.send_message(chat_id=message.chat.id,
+                            text=f"✂️ Задача изменена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                            parse_mode='HTML')
 
 
 def delete_task(message, task_id):
@@ -1566,8 +1619,7 @@ def handle_task(message):
                 task.set_user_id_added(message.from_user.id)
 
                 if task_date_str is None:
-                    bot.reply_to(
-                        message, '📅 Пожалуйста, напиши дату и время задачи.')
+                    bot.send_message(message.from_user.id, '📅 Пожалуйста, напиши дату и время задачи.')
                     bot.register_next_step_handler(message, handle_date, task)
                 else:
                     task_date = datetime.datetime.strptime(
@@ -1583,8 +1635,10 @@ def handle_task(message):
 
 
 def handle_date(message, task):
-    date_str, task_date_str = check_date_in_message(message.text)
+    date_str, task_date_str = check_date_in_message( str(task.text) + " " + str(message.text))
 
+    print(str(task.text) + " " + str(message.text), date_str, task_date_str)
+    
     # Если дата не найдена, просим пользователя указать ее еще раз
     if task_date_str is None:
         bot.reply_to(message, '📅 Пожалуйста, напиши дату и время задачи.')
@@ -1828,7 +1882,10 @@ def create_new_recurring_task():
             new_task.set_user_id_added(user_id_added)
             new_task.set_new_date(new_date)
 
-            if new_date.lower().startswith('каждую неделю'):
+            if new_date.lower().startswith('каждый день'):
+                new_deadline = datetime.datetime.strptime(
+                    deadline, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1)
+            elif new_date.lower().startswith('каждую неделю'):
                 new_deadline = datetime.datetime.strptime(
                     deadline, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(weeks=1)
             elif new_date.lower().startswith('каждый месяц'):
