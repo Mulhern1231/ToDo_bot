@@ -1428,7 +1428,7 @@ def edit_task_step(message, task_id, remake = True):
     day = calculate_time_diff(task_date, tas)
 
     bd.edit_task(task_id, task_date)
-    bd.edit_new_date(task_id, day.replace('-', ''))
+    bd.edit_new_date(task_id, day)
 
     # Получаем информацию о задаче
     task = bd.get_task(task_id)
