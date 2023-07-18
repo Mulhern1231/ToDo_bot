@@ -703,11 +703,8 @@ def callback_inline(call):
                 tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
                 # заменяем часы, минуты, секунды и микросекунды на 0 для tas и new_deadline_aa
-                day = calculate_time_diff(new_deadline, tas)
-
-
-                day = calculate_time_diff(new_deadline_aa, tas)
-
+                day = calculate_time_diff(tas, new_deadline)
+                print(day)
                 bd.edit_new_date(task_id, day)
 
                 # Получаем информацию о задаче
@@ -757,7 +754,7 @@ def callback_inline(call):
                 tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
                 # заменяем часы, минуты, секунды и микросекунды на 0 для tas и new_deadline_aa
-                day = calculate_time_diff(new_deadline, tas)
+                day = calculate_time_diff(tas, new_deadline)
 
                 bd.edit_new_date(task_id, day)
 
@@ -808,7 +805,7 @@ def callback_inline(call):
                 tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
                 # заменяем часы, минуты, секунды и микросекунды на 0 для tas и new_deadline
-                day = calculate_time_diff(new_deadline, tas)
+                day = calculate_time_diff(tas, new_deadline)
 
                 bd.edit_new_date(task_id, day)
 
@@ -1062,7 +1059,7 @@ def change_task_time(message, task_id):
     tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
     # заменяем часы, минуты, секунды и микросекунды на 0 для tas и task_date
-    day = calculate_time_diff(task_date, tas)
+    day = calculate_time_diff(tas, task_date)
 
     bd.edit_new_date(task_id, day)
 
@@ -1425,7 +1422,7 @@ def edit_task_step(message, task_id, remake = True):
     tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
     # заменяем часы, минуты, секунды и микросекунды на 0 для tas и task_date
-    day = calculate_time_diff(task_date, tas)
+    day = calculate_time_diff(tas, task_date)
 
     bd.edit_task(task_id, task_date)
     bd.edit_new_date(task_id, day)
