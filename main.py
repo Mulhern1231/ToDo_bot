@@ -1154,17 +1154,6 @@ def process_task_step(message, task=None):
 
             # ... Ваш оригинальный код ...
 
-        if task_date is None:
-            bot.send_message(
-                chat_id, 'Некорректный формат даты. Попробуйте еще раз.')
-            msg = bot.send_message(
-                chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
-            bot.register_next_step_handler(msg, process_date_step, task)
-            return
-
-        task_date_obj = datetime.datetime.strptime(
-            task_date, "%Y-%m-%d %H:%M:%S")
-        task.set_deadline(task_date)
         if recurring_task is not None:
             task.set_new_date(' '.join(recurring_task))
 
@@ -1550,8 +1539,7 @@ def handle_task(message):
                                         "%Y-%m-%d %H:%M:%S")
 
                 if task_datetime is None:
-                    bot.reply_to(
-                        message, 'Некорректный формат даты. Попробуйте еще раз.')
+                    bot.send_message(message.from_user.id, 'Некорректный формат даты. Попробуйте еще раз.')
                     return
 
                 task_datetime = datetime.datetime.strptime(
@@ -1643,11 +1631,9 @@ def handle_date(message, task):
     if task_date_str:
         task_date = datetime.datetime.strptime(task_date_str, "%Y-%m-%d %H:%M:%S")
         task.deadline = task_date
-
-        print(task.text, message)
         process_task_step(message, task)
     else:
-        bot.reply_to(message, '📅 Пожалуйста, напиши дату и время задачи.')
+        bot.send_message(message.from_user.id, '📅 Пожалуйста, напиши дату и время задачи.')
         bot.register_next_step_handler(message, handle_date, task)
         
 
