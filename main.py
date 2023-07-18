@@ -1637,18 +1637,19 @@ def handle_task(message):
 def handle_date(message, task):
     date_str, task_date_str = check_date_in_message( str(task.text) + " " + str(message.text))
 
-    print(str(task.text) + " " + str(message.text), date_str, task_date_str)
+    print(str(task.text) + " " + str(message.text), " / ", date_str, " / ", task_date_str)
     
     # Если дата не найдена, просим пользователя указать ее еще раз
-    if task_date_str is None:
-        bot.reply_to(message, '📅 Пожалуйста, напиши дату и время задачи.')
-        bot.register_next_step_handler(message, handle_date, task)
-    else:
+    if task_date_str:
         task_date = datetime.datetime.strptime(task_date_str, "%Y-%m-%d %H:%M:%S")
         task.deadline = task_date
 
         print(task.text, message)
         process_task_step(message, task)
+    else:
+        bot.reply_to(message, '📅 Пожалуйста, напиши дату и время задачи.')
+        bot.register_next_step_handler(message, handle_date, task)
+        
 
 
 # Настройки
