@@ -1596,7 +1596,7 @@ def handle_task(message):
                     chat_id = message.chat.id
                     task = bd.Task(chat_id, None)
 
-                task.text = task_text
+                task.text = task_text.replace(date_str, "")
                 task.set_user_id_added(message.from_user.id)
 
                 if task_date_str is None:
