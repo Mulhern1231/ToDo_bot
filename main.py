@@ -684,7 +684,7 @@ def callback_inline(call):
                 else:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]}",
                                           parse_mode='HTML')
             else:
                 username = call.from_user.username
@@ -741,7 +741,7 @@ def callback_inline(call):
                 else:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]}",
                                           parse_mode='HTML')
 
             elif action == "3hours":
@@ -792,7 +792,7 @@ def callback_inline(call):
                 else:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]}",
                                           parse_mode='HTML')
 
             elif action == "tmrw":
@@ -843,7 +843,7 @@ def callback_inline(call):
                 else:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]}",
                                           parse_mode='HTML')
             elif action == "other":
                 msg = bot.send_message(
@@ -933,7 +933,7 @@ def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, 
                 task_datetime = datetime.datetime.strptime(
                     converted_time, "%Y-%m-%d %H:%M:%S")
                 time = task_datetime.strftime('в %H:%M')
-                text += f"\n\n{idx}) 🔔 {date_format(converted_time)}\n✏️ {task[2]}\n🔁 {task[8]} {time}"
+                text += f"\n\n{idx}) 🔔 {date_format(converted_time)}\n✏️ {task[2]}\n🔁 {task[8]}"
             text += "\n- - - - - - - - - - - - - - - - - - - - - - - -"
 
         markup = types.InlineKeyboardMarkup()
@@ -993,7 +993,7 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
                 task_datetime = datetime.datetime.strptime(
                     task[3], "%Y-%m-%d %H:%M:%S")
                 time = task_datetime.strftime('в %H:%M')
-                text += f"\n\n{idx}) 🔔 {date_format(task[3])}\n✏️ {task[2]}\n🔁 {task[8]} {time}"
+                text += f"\n\n{idx}) 🔔 {date_format(task[3])}\n✏️ {task[2]}\n🔁 {task[8]}"
             text += "\n- - - - - - - - - - - - - - - - - - - - - - - -"
 
         markup = types.InlineKeyboardMarkup()
@@ -1463,11 +1463,11 @@ def edit_task_step(message, task_id, remake = True):
     else:
         if remake == True:
             bot.send_message(chat_id=message.chat.id,
-                            text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                            text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]}",
                             parse_mode='HTML')
         else:
             bot.send_message(chat_id=message.chat.id,
-                            text=f"✂️ Задача изменена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]} {time}",
+                            text=f"✂️ Задача изменена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {task[8]}",
                             parse_mode='HTML')
 
 
