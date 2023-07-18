@@ -1185,7 +1185,9 @@ def process_task_step(message, task=None):
 
 
         def hide_edit_button(chat_id, message_id, markup):
+            print("Test")
             time.sleep(30)  # Wait for 30 seconds
+            print("ok")
             markup = types.InlineKeyboardMarkup()
             delete_btn = types.InlineKeyboardButton(
                 'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
@@ -1260,10 +1262,25 @@ def process_date_step(message, task):
             'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
         markup.add(edit_btn, delete_btn)
 
-        bot.send_message(chat_id,
+
+        def hide_edit_button(chat_id, message_id, markup):
+            print("Test")
+            time.sleep(30)  # Wait for 30 seconds
+            print("ok")
+            markup = types.InlineKeyboardMarkup()
+            delete_btn = types.InlineKeyboardButton(
+                'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
+            markup.add(delete_btn)
+            bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
+
+        sent_message = bot.send_message(chat_id,
                          text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
                          parse_mode='HTML',
                          reply_markup=markup)
+    
+        threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
+
+        
 
         bot.send_message(chat_id, 'Выберите действие',
                          reply_markup=main_menu_markup())
@@ -1293,10 +1310,27 @@ def process_file_step(message, task):
                 'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
             markup.add(edit_btn, delete_btn)
 
-            bot.send_message(chat_id,
+
+
+            def hide_edit_button(chat_id, message_id, markup):
+                print("Test")
+                time.sleep(30)  # Wait for 30 seconds
+                print("ok")
+                markup = types.InlineKeyboardMarkup()
+                delete_btn = types.InlineKeyboardButton(
+                    'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
+                markup.add(delete_btn)
+                bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
+
+            sent_message = bot.send_message(chat_id,
                              text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
                              parse_mode='HTML',
                              reply_markup=markup)
+        
+            threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
+
+
+            
 
             # If the task is not for the sender
             if task.user_id != chat_id:
@@ -1601,7 +1635,7 @@ def handle_task(message):
 
 
 def handle_date(message, task):
-    date_str, task_date_str = check_date_in_message("data" + str(message.text))
+    date_str, task_date_str = check_date_in_message("data " + str(message.text))
 
     # Если дата не найдена, просим пользователя указать ее еще раз
     if task_date_str is None:
