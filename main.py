@@ -43,16 +43,29 @@ def convert_timezone(time_first: str, timezone_first: str, timezone_second: str)
     time_second = datetime_second.strftime("%Y-%m-%d %H:%M:%S")
     return time_second
 
-
-def days_declension(days):
-    if days % 10 == 1 and days % 100 != 11:
-        return str(days) + " день"
-    elif 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20):
-        return str(days) + " дня"
+def pluralize(n, forms):
+    if (n%10==1 and n%100!=11):
+        return forms[0]
+    elif (n%10>=2 and n%10<=4 and (n%100<10 or n%100>=20)):
+        return forms[1]
     else:
-        return str(days) + " дней"
+        return forms[2]
 
+def calculate_time_diff(start_date, end_date):
+    difference = end_date - start_date
 
+    # получим количество дней и секунд
+    days, seconds = difference.days, difference.seconds
+
+    # переводим секунды в часы
+    hours = seconds // 3600
+
+    # Отображаем разницу во времени
+    if days > 0:
+        return f"на {days} {pluralize(days, ['день', 'дня', 'дней'])}"
+    elif hours > 0:
+        return f"на {hours} {pluralize(hours, ['час', 'часа', 'часов'])}"
+    
 def normal_date(date):
     # Предполагается, что формат даты в БД "%Y-%m-%d %H:%M:%S"
     task_datetime = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
@@ -352,14 +365,21 @@ def city(message):
             lat=location.latitude, lng=location.longitude)
         bd.update_timezone(message.chat.id, timezone_str)
         if bd.get_user(message.chat.id)[6] is None:
-            bot.send_message(
-                message.chat.id, f"Ваш часовой пояс установлен на {timezone_str}")
+
+            timezone_info = pytz.timezone(timezone_str)
+            timezone_name = timezone_info.zone
+            utc_offset = datetime.now(timezone_info).strftime('%z')
+
+            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}")
             sent = bot.send_message(
                 message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
             bot.register_next_step_handler(sent, update_morning_plan, True)
         else:
-            bot.send_message(
-                message.chat.id, f"Ваш часовой пояс установлен на {timezone_str}", reply_markup=main_menu_markup())
+            timezone_info = pytz.timezone(timezone_str)
+            timezone_name = timezone_info.zone
+            utc_offset = datetime.now(timezone_info).strftime('%z')
+
+            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=main_menu_markup())
     else:
         sent = bot.send_message(
             message.chat.id, 'Не удалось определить город. Пожалуйста, попробуйте снова.')
@@ -459,14 +479,11 @@ def callback_inline(call):
         elif call.data == "how_to_use":
             bot.edit_message_text(chat_id=call.message.chat.id,
                                   message_id=call.message.message_id,
-                                  text="🎮 *Гайд по работе с Workie_bot*\n"
+                                  text="🎮 *Гайд по работе с Workie_bot*\n__"
                                   "1. Чтобы поставить задачу просто напиши *текст + время + дата*.\n"
-                                  "Например: Сделать презентацию 23 июня 15:00;\n"
-                                  "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду;\n"
-                                  "3. Не забудь настроить время для получения ежедневных отчетов утром и вечером;\n"
-                                  "4. В любом чате пиши @workie_bot и ставь задачи коллегам\n"
-                                  "5. Если у тебя есть идеи/предложения для Workie_bot, смело пиши боту @workie_help_bot.\n\n"
-                                  "Спасибо, что ты с Workie!",
+                                  "__Например: Сделать презентацию 23 июня 15:00;__\n"
+                                  "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
+                                  "3. В любом чате пиши @workie_bot и ставь задачи коллегам\n\n",
                                   parse_mode='Markdown')
         elif call.data.startswith("birthdays_list"):
             _, _, id = call.data.split("_")
@@ -677,20 +694,17 @@ def callback_inline(call):
 
             if action == "1hour":
                 new_deadline = datetime.datetime.now() + datetime.timedelta(hours=1)
-                bd.edit_task(task_id, new_deadline.strftime(
-                    '%Y-%m-%d %H:%M:%S'))
+                bd.edit_task(task_id, new_deadline.strftime('%Y-%m-%d %H:%M:%S'))
 
                 tas = bd.get_task(task_id)
                 tas_str = tas[3]
                 tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
                 # заменяем часы, минуты, секунды и микросекунды на 0 для tas и new_deadline_aa
-                tas = tas.replace(hour=0, minute=0, second=0, microsecond=0)
-                new_deadline_aa = new_deadline.replace(
-                    hour=0, minute=0, second=0, microsecond=0)
+                day = calculate_time_diff(new_deadline, tas)
 
-                difference = new_deadline_aa - tas
-                day = days_declension(difference.days)
+
+                day = calculate_time_diff(new_deadline_aa, tas)
 
                 bd.edit_new_date(task_id, day)
 
@@ -741,12 +755,7 @@ def callback_inline(call):
                 tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
                 # заменяем часы, минуты, секунды и микросекунды на 0 для tas и new_deadline_aa
-                tas = tas.replace(hour=0, minute=0, second=0, microsecond=0)
-                new_deadline_aa = new_deadline.replace(
-                    hour=0, minute=0, second=0, microsecond=0)
-
-                difference = new_deadline_aa - tas
-                day = days_declension(difference.days)
+                day = calculate_time_diff(new_deadline, tas)
 
                 bd.edit_new_date(task_id, day)
 
@@ -797,12 +806,7 @@ def callback_inline(call):
                 tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
                 # заменяем часы, минуты, секунды и микросекунды на 0 для tas и new_deadline
-                tas = tas.replace(hour=0, minute=0, second=0, microsecond=0)
-                new_deadline_aa = new_deadline.replace(
-                    hour=0, minute=0, second=0, microsecond=0)
-
-                difference = new_deadline_aa - tas
-                day = days_declension(difference.days)
+                day = calculate_time_diff(new_deadline, tas)
 
                 bd.edit_new_date(task_id, day)
 
@@ -1056,11 +1060,7 @@ def change_task_time(message, task_id):
     tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
     # заменяем часы, минуты, секунды и микросекунды на 0 для tas и task_date
-    tas = tas.replace(hour=0, minute=0, second=0, microsecond=0)
-    task_date_aa = task_date.replace(hour=0, minute=0, second=0, microsecond=0)
-
-    difference = task_date_aa - tas
-    day = days_declension(difference.days)
+    day = calculate_time_diff(task_date, tas)
 
     bd.edit_new_date(task_id, day)
 
@@ -1423,11 +1423,7 @@ def edit_task_step(message, task_id, remake = True):
     tas = datetime.datetime.strptime(tas_str, "%Y-%m-%d %H:%M:%S")
 
     # заменяем часы, минуты, секунды и микросекунды на 0 для tas и task_date
-    tas = tas.replace(hour=0, minute=0, second=0, microsecond=0)
-    task_date_aa = task_date.replace(hour=0, minute=0, second=0, microsecond=0)
-
-    difference = task_date_aa - tas
-    day = days_declension(difference.days)
+    day = calculate_time_diff(task_date, tas)
 
     bd.edit_task(task_id, task_date)
     bd.edit_new_date(task_id, day.replace('-', ''))
@@ -1483,17 +1479,7 @@ def delete_task(message, task_id):
 
     task_id, _, description, task_time, _, _, timezone, _, _ = task
 
-    task_datetime = datetime.datetime.strptime(task_time, '%Y-%m-%d %H:%M:%S')
-    local_timezone = pytz.timezone(timezone)
-    local_task_datetime = task_datetime.astimezone(local_timezone)
-
-    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
-
-    formatted_task_datetime = local_task_datetime.strftime("%Y-%m-%d %H:%M:%S")
-
-    locale.setlocale(locale.LC_TIME, '')
-
-    cancel_message = f"❌ Задача отменена\n\n🔔 <s><b>{normal_date(str(formatted_task_datetime))}</b>\n✏️ {description}</s>"
+    cancel_message = f"❌ Задача отменена\n\n🔔 <s><b>{normal_date(str(task_time))}</b>\n✏️ {description}</s>"
     bot.send_message(chat_id, cancel_message, parse_mode='HTML')
 
     bot.send_message(chat_id, 'Выберите действие:',
@@ -1733,14 +1719,11 @@ def update_evening_report(message, new=False):
             bot.send_message(
                 message.chat.id, "💫 Отлично! Теперь я полностью готов к работе!")
             bot.send_message(chat_id=message.chat.id,
-                             text="🎮 *Гайд по работе с Workie_bot*\n"
-                             "1. Чтобы поставить задачу просто напиши *текст + время + дата*.\n"
-                             "Например: Сделать презентацию 23 июня 15:00;\n"
-                             "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду;\n"
-                             "3. Не забудь настроить время для получения ежедневных отчетов утром и вечером;\n"
-                             "4. В любом чате пиши @workie_bot и ставь задачи коллегам\n"
-                             "5. Если у тебя есть идеи/предложения для Workie_bot, смело пиши боту @workie_help_bot.\n\n"
-                             "Спасибо, что ты с Workie!",
+                             text="🎮 *Гайд по работе с Workie_bot*\n__"
+                                  "1. Чтобы поставить задачу просто напиши *текст + время + дата*.\n"
+                                  "__Например: Сделать презентацию 23 июня 15:00;__\n"
+                                  "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
+                                  "3. В любом чате пиши @workie_bot и ставь задачи коллегам\n\n",
                              parse_mode='Markdown',
                              reply_markup=main_menu_markup())
     else:
@@ -1777,14 +1760,22 @@ def location(message):
 
     if bd.get_user(message.chat.id)[6] is None:
         a = telebot.types.ReplyKeyboardRemove()
-        bot.send_message(
-            message.chat.id, f"Ваш часовой пояс установлен на {timezone_str}", reply_markup=a)
+
+        timezone_info = pytz.timezone(timezone_str)
+        timezone_name = timezone_info.zone
+        utc_offset = datetime.now(timezone_info).strftime('%z')
+
+        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=a)
+
         sent = bot.send_message(
             message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
         bot.register_next_step_handler(sent, update_morning_plan, True)
     else:
-        bot.send_message(
-            message.chat.id, f"Ваш часовой пояс установлен на {timezone_str}", reply_markup=main_menu_markup())
+        timezone_info = pytz.timezone(timezone_str)
+        timezone_name = timezone_info.zone
+        utc_offset = datetime.now(timezone_info).strftime('%z')
+
+        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=main_menu_markup())
 
 
 # Справка
@@ -1868,7 +1859,7 @@ def create_new_recurring_task():
             print(task[0])
             task_id, user_id, task_text, deadline, _, file_id, timezone, user_id_added, new_date = task
 
-            if new_date[0].isdigit():
+            if new_date.split()[0] == "на":
                 continue
 
             new_task = bd.Task(user_id, task_text)
