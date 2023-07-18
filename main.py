@@ -371,7 +371,7 @@ def city(message):
             utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
             utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})")
+            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} (UTC{str(utc_offset)})")
             sent = bot.send_message(
                 message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
             bot.register_next_step_handler(sent, update_morning_plan, True)
@@ -381,7 +381,7 @@ def city(message):
             utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
             utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})", reply_markup=main_menu_markup())
+            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} (UTC{str(utc_offset)})", reply_markup=main_menu_markup())
     else:
         sent = bot.send_message(
             message.chat.id, 'Не удалось определить город. Пожалуйста, попробуйте снова.')
@@ -481,12 +481,12 @@ def callback_inline(call):
         elif call.data == "how_to_use":
             bot.edit_message_text(chat_id=call.message.chat.id,
                                   message_id=call.message.message_id,
-                                  text="🎮 *Гайд по работе с Workie_bot*\n__"
-                                  "1. Чтобы поставить задачу просто напиши *текст + время + дата*.\n"
-                                  "__Например: Сделать презентацию 23 июня 15:00;__\n"
-                                  "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
-                                  "3. В любом чате пиши @workie_bot и ставь задачи коллегам\n\n",
-                                  parse_mode='Markdown')
+                                  text="<strong>🎮 Гайд по работе с Workie_bot</strong>\n"
+                                    "1. Чтобы поставить задачу просто напиши <strong>текст + время + дата</strong>.\n"
+                                    "<em>Например: Сделать презентацию 23 июня 15:00;</em>\n"
+                                    "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
+                                    "3. В любом чате пиши @workie_bot и ставь задачи коллегам\n\n",
+                                  parse_mode='HTML',)
         elif call.data.startswith("birthdays_list"):
             _, _, id = call.data.split("_")
             show_birthdays(id)
@@ -1721,12 +1721,12 @@ def update_evening_report(message, new=False):
             bot.send_message(
                 message.chat.id, "💫 Отлично! Теперь я полностью готов к работе!")
             bot.send_message(chat_id=message.chat.id,
-                             text="🎮 *Гайд по работе с Workie_bot*\n__"
-                                  "1. Чтобы поставить задачу просто напиши *текст + время + дата*.\n"
-                                  "__Например: Сделать презентацию 23 июня 15:00;__\n"
-                                  "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
-                                  "3. В любом чате пиши @workie_bot и ставь задачи коллегам\n\n",
-                             parse_mode='Markdown',
+                             text="<strong>🎮 Гайд по работе с Workie_bot</strong>\n"
+                                    "1. Чтобы поставить задачу просто напиши <strong>текст + время + дата</strong>.\n"
+                                    "<em>Например: Сделать презентацию 23 июня 15:00;</em>\n"
+                                    "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
+                                    "3. В любом чате пиши @workie_bot и ставь задачи коллегам\n\n",
+                             parse_mode='HTML',
                              reply_markup=main_menu_markup())
     else:
         if new:
@@ -1768,7 +1768,7 @@ def location(message):
         utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
         utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})", reply_markup=a)
+        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} (UTC{str(utc_offset)})", reply_markup=a)
 
         sent = bot.send_message(
             message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
@@ -1779,7 +1779,7 @@ def location(message):
         utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
         utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})", reply_markup=main_menu_markup())
+        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} (UTC{str(utc_offset)})", reply_markup=main_menu_markup())
 
 
 # Справка
