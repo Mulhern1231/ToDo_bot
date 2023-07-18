@@ -369,8 +369,9 @@ def city(message):
             timezone_info = pytz.timezone(timezone_str)
             timezone_name = timezone_info.zone
             utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
+            utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}")
+            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})")
             sent = bot.send_message(
                 message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
             bot.register_next_step_handler(sent, update_morning_plan, True)
@@ -378,8 +379,9 @@ def city(message):
             timezone_info = pytz.timezone(timezone_str)
             timezone_name = timezone_info.zone
             utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
+            utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=main_menu_markup())
+            bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})", reply_markup=main_menu_markup())
     else:
         sent = bot.send_message(
             message.chat.id, 'Не удалось определить город. Пожалуйста, попробуйте снова.')
@@ -1764,8 +1766,9 @@ def location(message):
         timezone_info = pytz.timezone(timezone_str)
         timezone_name = timezone_info.zone
         utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
+        utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=a)
+        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})", reply_markup=a)
 
         sent = bot.send_message(
             message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
@@ -1774,8 +1777,9 @@ def location(message):
         timezone_info = pytz.timezone(timezone_str)
         timezone_name = timezone_info.zone
         utc_offset = datetime.datetime.now(timezone_info).strftime('%z')
+        utc_offset = str(utc_offset)[0] + str(int(utc_offset[1:3]))
 
-        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name}, {utc_offset}", reply_markup=main_menu_markup())
+        bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} ({str(utc_offset)})", reply_markup=main_menu_markup())
 
 
 # Справка
