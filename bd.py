@@ -138,13 +138,14 @@ def get_tasks(user_id, status):
     cursor = conn.cursor()
     current_time = datetime.datetime.now()
     if status == "overdue":
-        cursor.execute('SELECT * FROM tasks WHERE user_id = ? AND status = ? AND deadline < ?', (user_id, 'pending', current_time))
+        cursor.execute('SELECT * FROM tasks WHERE user_id = ? AND status = ? AND deadline < ? ORDER BY datetime(deadline) ASC', (user_id, 'pending', current_time))
     else:
-        cursor.execute('SELECT * FROM tasks WHERE user_id = ? AND status = ?', (user_id, status))
+        cursor.execute('SELECT * FROM tasks WHERE user_id = ? AND status = ? ORDER BY datetime(deadline) ASC', (user_id, status))
     rows = cursor.fetchall()
     tasks = rows
     conn.close()
     return tasks
+
 
 def get_all_tasks():
     conn = sqlite3.connect(bd_name)  # Замените 'my_database.db' на имя вашей базы данных
@@ -300,7 +301,7 @@ def get_colleagues_list(user_id):
 def get_tasks_by_status(user_id, status, page=0, tasks_per_page=config.TASKS_PAGE):
     conn = sqlite3.connect(bd_name)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tasks WHERE user_id=? AND status=?", (user_id, status))
+    cursor.execute("SELECT * FROM tasks WHERE user_id=? AND status=? ORDER BY datetime(deadline) ASC", (user_id, status))
     all_tasks = cursor.fetchall()
     tasks = all_tasks[page*tasks_per_page:(page+1)*tasks_per_page]
     cursor.close()

@@ -251,12 +251,22 @@ def check_date_in_message(message):
                     date_obj = dateparser_parse(time_str)
                     if date_obj.time() < datetime.datetime.now().time():
                         date_obj = date_obj + datetime.timedelta(days=1)
+
+                # Check if the month has already passed
+                if date_obj.month < datetime.datetime.now().month:
+                    date_obj = date_obj + relativedelta(years=1)
+
             if date_obj:
                 for preposition in prepositions:
                     preposition_with_space = ' ' + preposition + ' '
                     if preposition_with_space + date_str in message:
                         date_str_with_preposition = preposition_with_space + date_str
                         break
+
+                if date_obj.time() == datetime.datetime.min.time():
+                    current_time = datetime.datetime.now().time()
+                    date_obj = datetime.datetime.combine(date_obj.date(), current_time)
+
                 return date_str_with_preposition if date_str_with_preposition else date_str, date_obj.strftime("%Y-%m-%d %H:%M:%S")
     return None, None
 
@@ -965,7 +975,7 @@ def view_tasks_for_others(call, page=0, id=0):
 
         # добавляем кнопку "<<Назад"
         markup.add(types.InlineKeyboardButton(
-                "<<Назад", callback_data=f"backtask_{call.message.chat.id}"))
+                "<< Назад", callback_data=f"backtask_{call.message.chat.id}"))
 
         bot.edit_message_text(
             chat_id=call.message.chat.id, 
@@ -1012,7 +1022,9 @@ def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, 
         text += f" @ {bd.get_user(colleague_id)[2]} "
         text += {bd.get_user(colleague_id)[3]} if bd.get_user(colleague_id)[3] else ""
 
-        for idx, task in enumerate(tasks, start=1):
+        task_index = page * TASKS_PER_PAGE  # Начальный индекс задачи на текущей странице
+
+        for idx, task in enumerate(tasks, start=task_index + 1):
             # Преобразование времени задачи в часовой пояс пользователя
             converted_time = convert_timezone(task[3], task[6], user_timezone)
 
@@ -1035,10 +1047,10 @@ def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, 
         buttons = []
         if page > 0:
             buttons.append(types.InlineKeyboardButton(
-                "<", callback_data=f'for_other|{colleague_id}|{status}|{page-1}'))
+                "<", callback_data=f'for_other|{colleague_id}|{status}|{page-1}|{user_start}'))
         if page < pages - 1:
             buttons.append(types.InlineKeyboardButton(
-                ">", callback_data=f'for_other|{colleague_id}|{status}|{page+1}'))
+                ">", callback_data=f'for_other|{colleague_id}|{status}|{page+1}|{user_start}'))
         buttons.append(types.InlineKeyboardButton(
             "<< Назад", callback_data=f'back|{page}|{user_start}'))
         markup.add(*buttons)
@@ -1052,6 +1064,7 @@ def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, 
             bot.send_message(message.chat.id, text, reply_markup=markup)
     else:
         bot.send_message(message.chat.id, "У этого пользователя нет задач.")
+
 
 
 # Просмотр задач
@@ -1084,7 +1097,7 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
 
         text = "💥 Активные задачи" if status == 'pending' else "⏰ Просроченные задачи"
 
-        for idx, task in enumerate(tasks, start=1):
+        for idx, task in enumerate(tasks, start=1 + page * TASKS_PER_PAGE):
             if task[8] == None:
                 text += f"\n\n{idx}) 🔔 {normal_date(task[3])}\n✏️ {task[2]}"
             else:
@@ -1105,13 +1118,13 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
         if delete_mode:
             for idx in range(len(tasks)):
                 buttons.append(types.InlineKeyboardButton(
-                    str(idx+1), callback_data=f'delete_{chat_id}_{status}_{page}_{idx}'))
+                    str(idx+1 + page * TASKS_PER_PAGE), callback_data=f'delete_{chat_id}_{status}_{page}_{idx}'))
             buttons.append(types.InlineKeyboardButton(
                 "<< Назад", callback_data=f'view_{status}_{page}'))
         elif edit_mode:
             for idx in range(len(tasks)):
                 buttons.append(types.InlineKeyboardButton(
-                    str(idx+1), callback_data=f'edit_{chat_id}_{status}_{page}_{idx}'))
+                    str(idx+1 + page * TASKS_PER_PAGE), callback_data=f'edit_{chat_id}_{status}_{page}_{idx}'))
             buttons.append(types.InlineKeyboardButton(
                 "<< Назад", callback_data=f'view_{status}_{page}'))
         else:
@@ -1121,6 +1134,9 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
             if page < pages - 1:
                 buttons.append(types.InlineKeyboardButton(
                     ">", callback_data=f'view_{status}_{page+1}'))
+            markup.add(*buttons)  # Add navigation buttons to markup
+
+            buttons = []  # Start new row
             buttons.append(types.InlineKeyboardButton(
                 "❌ Удалить по номеру", callback_data=f'delete_mode_{status}_{page}'))
             buttons.append(types.InlineKeyboardButton(
@@ -1129,6 +1145,7 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
         bot.send_message(chat_id, text, reply_markup=markup)
     else:
         bot.send_message(chat_id, "Задач не найдено")
+
 
 
 def change_task_time(message, task_id):
@@ -1245,6 +1262,8 @@ def process_task_step(message, task=None):
             task_text = message.text
         else:
             task_text = task.text
+
+        print(task.deadline)
 
         if task.deadline == None:
             task_date_str, task_date = check_date_in_message(task_text)
@@ -1953,6 +1972,7 @@ def polling():
 def send_task_notification():
     while True:
         tasks = bd.get_due_tasks()
+        messages_to_remove_markup = []
         for task in tasks:
             task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
 
@@ -1975,8 +1995,18 @@ def send_task_notification():
                 "✅ Готово", callback_data=f'deadline|done|{task_id}')
             markup.add(one_hour, three_hours, tomorrow, other_time, done)
 
-            bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
+            msg = bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
+            messages_to_remove_markup.append((user_id, msg.message_id))
+
         time.sleep(900)
+
+        # remove buttons from the message
+        new_markup = types.InlineKeyboardMarkup()  # create empty markup
+        for user_id, message_id in messages_to_remove_markup:
+            try:
+                bot.edit_message_reply_markup(chat_id=user_id, message_id=message_id, reply_markup=new_markup)
+            except Exception as e:
+                print(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
 
 
 def create_new_recurring_task():
@@ -2093,6 +2123,16 @@ def send_daily_task_summary():
         time.sleep(60)
 
 def send_task_notification_60s():
+    def remove_markup_after_15(messages):
+        for user_id, message_id in messages_dict.items():
+            try:
+                # Remove buttons from the message
+                new_markup = types.InlineKeyboardMarkup()  # create empty markup
+                bot.edit_message_reply_markup(chat_id=user_id, message_id=message_id, reply_markup=new_markup)
+            except Exception as e:
+                print(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
+
+    messages_dict = []
     while True:
         tasks = bd.get_all_tasks()
         for task in tasks:
@@ -2115,10 +2155,22 @@ def send_task_notification_60s():
                 done = types.InlineKeyboardButton("✅ Готово", callback_data=f'deadline|done|{task_id}')
                 markup.add(one_hour, three_hours, tomorrow, other_time, done)
 
-                bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
-            
-            print(converted_time_datetime - datetime.timedelta(seconds=20) <= now <= converted_time_datetime + datetime.timedelta(seconds=20), task_id, now, converted_time_datetime)
-        
+                msg = bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
+                
+
+                print(msg.message_id)
+                messages_dict.append((user_id, msg.message_id))
+        print(messages_dict)
+
+
+
+        if messages_dict:
+            thread = threading.Thread(target=remove_markup_after_15, args=(messages_dict))
+            thread.start()
+
+
+            messages_dict = []
+
         # Sleep for 60 seconds (1 minute) before checking again
         time.sleep(60)
 
