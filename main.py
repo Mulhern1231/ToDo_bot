@@ -1595,8 +1595,12 @@ def handle_task(message):
                 else:
                     chat_id = message.chat.id
                     task = bd.Task(chat_id, None)
-
-                task.text = task_text.replace(date_str, "")
+                    
+                if date_str:
+                    task.text = task_text.replace(date_str, "")
+                else:
+                    task.text = task_text
+                
                 task.set_user_id_added(message.from_user.id)
 
                 if task_date_str is None:
