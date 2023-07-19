@@ -3,3 +3,7 @@ BDNAME = "tasks.db"
 TASKS_PAGE = 10
 NAME = "@ToDoTasks_new_bot"
 TIMEZONE = "Europe/Moscow"
+
+
+
+NAME_SECOND_BOT = '@ToDoTasks_new_bot_HELP'

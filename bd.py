@@ -276,6 +276,27 @@ def get_colleagues(user_id, page=0, items_per_page=10):
     conn.close()
     return colleagues, len(all_colleagues)
 
+
+def get_colleagues_list(user_id):
+    conn = sqlite3.connect(bd_name)
+    cursor = conn.cursor()
+    
+    # Get colleagues who you gave tasks to
+    cursor.execute("SELECT DISTINCT user_id FROM tasks WHERE user_id_added = ?", (user_id,))
+    colleagues_you_gave_tasks_to = [i[0] for i in cursor.fetchall()]
+
+    # Get colleagues who gave you tasks
+    cursor.execute("SELECT DISTINCT user_id_added FROM tasks WHERE user_id = ?", (user_id,))
+    colleagues_who_gave_you_tasks = [i[0] for i in cursor.fetchall()]
+
+    cursor.close()
+    conn.close()
+    
+    # Combine both lists and remove duplicates by converting it to a set, then back to a list
+    all_colleagues = list(set(colleagues_you_gave_tasks_to + colleagues_who_gave_you_tasks))
+    
+    return all_colleagues
+
 def get_tasks_by_status(user_id, status, page=0, tasks_per_page=config.TASKS_PAGE):
     conn = sqlite3.connect(bd_name)
     cursor = conn.cursor()
