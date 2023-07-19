@@ -733,7 +733,6 @@ def callback_inline(call):
 
             # Создаем разметку только с кнопкой "Отменить"
             markup_without_edit = types.InlineKeyboardMarkup()
-            markup_without_edit.add(delete_btn)
 
             # Обновляем сообщение с новой разметкой и новым текстом
             task = bd.get_task(task_id)
@@ -1289,11 +1288,7 @@ def process_task_step(message, task=None):
 
         def hide_edit_button(chat_id, message_id, markup):
             time.sleep(30)  # Wait for 30 seconds
-            markup = types.InlineKeyboardMarkup()
-            delete_btn = types.InlineKeyboardButton(
-                'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
-            markup.add(delete_btn)
-            bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
+            bot.edit_message_reply_markup(chat_id, message_id=message_id)
 
         sent_message = bot.send_message(chat_id,
                          text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
@@ -1371,9 +1366,6 @@ def process_date_step(message, task):
         def hide_edit_button(chat_id, message_id, markup):
             time.sleep(30)  # Wait for 30 seconds
             markup = types.InlineKeyboardMarkup()
-            delete_btn = types.InlineKeyboardButton(
-                'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
-            markup.add(delete_btn)
             bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
 
         sent_message = bot.send_message(chat_id,
@@ -1418,9 +1410,6 @@ def process_file_step(message, task):
             def hide_edit_button(chat_id, message_id, markup):
                 time.sleep(30)  # Wait for 30 seconds
                 markup = types.InlineKeyboardMarkup()
-                delete_btn = types.InlineKeyboardButton(
-                    'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
-                markup.add(delete_btn)
                 bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
 
             sent_message = bot.send_message(chat_id,
@@ -1589,7 +1578,7 @@ def delete_task(message, task_id):
 
     task_id, _, description, task_time, _, _, timezone, _, _ = task
 
-    cancel_message = f"❌ Задача отменена\n\n🔔 <s><b>{normal_date(str(task_time))}</b>\n✏️ {description}</s>"
+    cancel_message = f"❌ Задача отменена\n\n<s><b>🔔 {normal_date(str(task_time))}</b>\n✏️ {description}</s>"
     bot.send_message(chat_id, cancel_message, parse_mode='HTML')
 
     bot.send_message(chat_id, 'Выберите действие:',
