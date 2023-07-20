@@ -34,7 +34,6 @@ def date_format(date):
     date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
     return datetime.datetime.strftime(date, '%d.%m.%Y %H:%M')
 
-
 def convert_timezone(time_first: str, timezone_first: str, timezone_second: str) -> str:
     datetime_first = datetime.datetime.strptime(
         time_first, "%Y-%m-%d %H:%M:%S")
@@ -89,7 +88,6 @@ def normal_date(date):
     for eng, rus in weekdays.items():
         formatted_datetime = formatted_datetime.replace(eng, rus)
     return formatted_datetime
-
 
 def check_date_in_message(message):
     message = message.lower()
@@ -270,7 +268,6 @@ def check_date_in_message(message):
                 return date_str_with_preposition if date_str_with_preposition else date_str, date_obj.strftime("%Y-%m-%d %H:%M:%S")
     return None, None
 
-
 def check_recurring_in_message(message):
     recurring_formats = ["каждый день", "каждую неделю", "каждый месяц",
                          "каждый понедельник", "каждый вторник", "каждую среду",
@@ -284,7 +281,6 @@ def check_recurring_in_message(message):
             return recurring_format
     return None
 
-
 def get_next_weekday(weekday: int):
     """
     Get the next weekday from the current date.
@@ -296,7 +292,6 @@ def get_next_weekday(weekday: int):
         days_ahead += 7
     return datetime.datetime.now() + timedelta(days=days_ahead)
 
-
 def update_datetime_with_time(dt: datetime, time: str):
     """
     Update the time in the datetime object.
@@ -305,7 +300,6 @@ def update_datetime_with_time(dt: datetime, time: str):
     """
     time_obj = datetime.datetime.strptime(time, '%H:%M')
     return dt.replace(hour=time_obj.hour, minute=time_obj.minute, second=time_obj.second)
-
 
 def get_sorted_birthdays():
     users = bd.get_all_users()
@@ -325,6 +319,15 @@ def get_sorted_birthdays():
         birthday_data.append((user[2], user[3], birth_date, age, sort_order))
     birthday_data.sort(key=lambda x: (x[4], x[2].month, x[2].day))
     return birthday_data
+
+def get_next_birthday(birth_date):
+    now = datetime.datetime.now()
+    next_birthday = datetime.datetime(now.year, birth_date.month, birth_date.day)
+    if now > next_birthday:
+        next_birthday = datetime.datetime(now.year + 1, birth_date.month, birth_date.day)
+    return next_birthday
+
+
 
 
 # task functions
@@ -493,12 +496,12 @@ def callback_inline(call):
         elif call.data == "how_to_use":
             bot.edit_message_text(chat_id=call.message.chat.id,
                                   message_id=call.message.message_id,
-                                  text="<strong>🎮 Гайд по работе с Workie_bot</strong>\n"
+                                  text=f"<strong>🎮 Гайд по работе с {config.TITLE}</strong>\n"
                                     "1. Чтобы поставить задачу просто напиши <strong>текст + время + дата</strong>.\n"
                                     "<em>Например: Сделать презентацию 23 июня 15:00;</em>\n"
                                     "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
                                     "3. Не забудь настроить время для получения ежедневных отчетов утром и вечером;\n"
-                                    "4. В любом чате пиши @workie_bot и ставь задачи коллегам;\n"
+                                    f"4. В любом чате пиши {config.NAME} и ставь задачи коллегам;\n"
                                     f"5. Есть у тебя есть идеи/предложения для {config.NAME}, смело пиши боту {config.NAME_SECOND_BOT}.\n\n"
                                     "Спасибо, что ты с Workie!",
                                   parse_mode='HTML',)
@@ -572,8 +575,7 @@ def callback_inline(call):
                 call.message, user, int(page), call, user_start)
         elif call.data.startswith("for_other|"):
             _, user, status, page, user_start = call.data.split("|")
-            view_tasks_for_other_user(
-                call.message, user, status, int(page), call, user_start)
+            view_tasks_for_other_user(call.message, user, status, int(page), call, user_start)
         elif call.data.startswith("next_page"):
             _, _, current_page = call.data.split("_")
             current_page = int(current_page)
@@ -715,12 +717,17 @@ def callback_inline(call):
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
+                        bot.edit_message_text(chat_id=call.message.chat.id,
+                                            message_id=call.message.message_id,
+                                            text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+                                            parse_mode='HTML')
                     else:
                         time_req = str(task[8])
-                    bot.edit_message_text(chat_id=call.message.chat.id,
-                                          message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
-                                          parse_mode='HTML')
+                        bot.edit_message_text(chat_id=call.message.chat.id,
+                                            message_id=call.message.message_id,
+                                            text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                            parse_mode='HTML')
+                        
             else:
                 username = call.from_user.username
                 bot.send_message(
@@ -815,12 +822,17 @@ def callback_inline(call):
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
-                    else:
-                        time_req = str(task[8])
-                    bot.edit_message_text(chat_id=call.message.chat.id,
+                        bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
                                           text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
                                           parse_mode='HTML')
+                    else:
+                        time_req = str(task[8])
+                        bot.edit_message_text(chat_id=call.message.chat.id,
+                                          message_id=call.message.message_id,
+                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          parse_mode='HTML')
+                        
 
             elif action == "3hours":
                 new_deadline = datetime.datetime.now() + datetime.timedelta(hours=3)
@@ -870,11 +882,15 @@ def callback_inline(call):
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
-                    else:
-                        time_req = str(task[8])
-                    bot.edit_message_text(chat_id=call.message.chat.id,
+                        bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
                                           text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+                                          parse_mode='HTML')
+                    else:
+                        time_req = str(task[8])
+                        bot.edit_message_text(chat_id=call.message.chat.id,
+                                          message_id=call.message.message_id,
+                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
 
             elif action == "tmrw":
@@ -925,12 +941,17 @@ def callback_inline(call):
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
-                    else:
-                        time_req = str(task[8])
-                    bot.edit_message_text(chat_id=call.message.chat.id,
+                        bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
                                           text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
                                           parse_mode='HTML')
+                    else:
+                        time_req = str(task[8])
+                        bot.edit_message_text(chat_id=call.message.chat.id,
+                                          message_id=call.message.message_id,
+                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          parse_mode='HTML')
+                        
             elif action == "other":
                 msg = bot.send_message(
                     call.message.chat.id, '📅 Напиши дату и время нового дедлайна.')
@@ -962,7 +983,7 @@ def view_tasks_for_others(call, page=0, id=0):
         markup = types.InlineKeyboardMarkup()
         for colleague in colleagues:
             if bd.get_user(colleague)[3]:
-                name = str(bd.get_user(colleague)[2]) + str(bd.get_user(colleague)[3])
+                name = str(bd.get_user(colleague)[2]) + " " + str(bd.get_user(colleague)[3])
             else:
                 name = str(bd.get_user(colleague)[2])
             markup.add(types.InlineKeyboardButton(name, callback_data=f'user_{colleague}_{page}_{user_id}'))
@@ -1020,7 +1041,7 @@ def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, 
         pages = math.ceil(total_tasks / TASKS_PER_PAGE)
         text = " 💥 Активные задачи" if status == 'pending' else " ⏰ Просроченные задачи"
         text += f" @ {bd.get_user(colleague_id)[2]} "
-        text += {bd.get_user(colleague_id)[3]} if bd.get_user(colleague_id)[3] else ""
+        text += str(bd.get_user(colleague_id)[3]) if bd.get_user(colleague_id)[3] else ""
 
         task_index = page * TASKS_PER_PAGE  # Начальный индекс задачи на текущей странице
 
@@ -1038,9 +1059,11 @@ def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, 
                 time = task_datetime.strftime('в %H:%M')
                 if task[8].split()[0] != 'на':
                     time_req = str(task[8]) + ' ' + time
+                    text += f"\n\n{idx}) 🔔 {normal_date(converted_time)}\n✏️ {task[2]}\n🔁 {time_req}"
                 else:
                     time_req = str(task[8])
-                text += f"\n\n{idx}) 🔔 {normal_date(converted_time)}\n✏️ {task[2]}\n🔁 {time_req}"
+                    text += f"\n\n{idx}) 🔔 {normal_date(converted_time)}\n✏️ {task[2]}\n🔃 {time_req}"
+                
             text += "\n- - - - - - - - - - - - - - - - - - - - - - - -"
 
         markup = types.InlineKeyboardMarkup()
@@ -1107,10 +1130,12 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
 
                 if task[8].split()[0] != 'на':
                     time_req = str(task[8]) + ' ' + time
+                    text += f"\n\n{idx}) 🔔 {normal_date(task[3])}\n✏️ {task[2]}\n🔁 {time_req}"
                 else:
                     time_req = str(task[8])
+                    text += f"\n\n{idx}) 🔔 {normal_date(task[3])}\n✏️ {task[2]}"
 
-                text += f"\n\n{idx}) 🔔 {normal_date(task[3])}\n✏️ {task[2]}\n🔁 {time_req}"
+                
             text += "\n- - - - - - - - - - - - - - - - - - - - - - - -"
 
         markup = types.InlineKeyboardMarkup()
@@ -1304,17 +1329,28 @@ def process_task_step(message, task=None):
             'Отменить ❌', callback_data=f're_canceled_task_{taskID}')
         markup.add(edit_btn, delete_btn)
 
+        if task.user_id != chat_id:
+            def hide_edit_button(chat_id, message_id, markup):
+                time.sleep(30)  # Wait for 30 seconds
+                bot.edit_message_reply_markup(chat_id, message_id=message_id)
 
-        def hide_edit_button(chat_id, message_id, markup):
-            time.sleep(30)  # Wait for 30 seconds
-            bot.edit_message_reply_markup(chat_id, message_id=message_id)
+            sent_message = bot.send_message(chat_id,
+                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}\n👤 @{str(bd.get_user(task.user_id)[1])}",
+                            parse_mode='HTML',
+                            reply_markup=markup)
+        
+            threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
+        else:
+            def hide_edit_button(chat_id, message_id, markup):
+                time.sleep(30)  # Wait for 30 seconds
+                bot.edit_message_reply_markup(chat_id, message_id=message_id)
 
-        sent_message = bot.send_message(chat_id,
-                         text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
-                         parse_mode='HTML',
-                         reply_markup=markup)
+            sent_message = bot.send_message(chat_id,
+                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
+                            parse_mode='HTML',
+                            reply_markup=markup)
     
-        threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
+            threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
 
         # If the task is not for the sender
         if task.user_id != chat_id:
@@ -1577,17 +1613,27 @@ def edit_task_step(message, task_id, remake = True):
 
         if task[8].split()[0] != 'на':
             time_req = str(task[8]) + ' ' + time
-        else:
-            time_req = str(task[8])
-        
-        if remake == True:
-            bot.send_message(chat_id=message.chat.id,
+            if remake == True:
+                bot.send_message(chat_id=message.chat.id,
                             text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
                             parse_mode='HTML')
+            else:
+                bot.send_message(chat_id=message.chat.id,
+                                text=f"✂️ Задача изменена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+                                parse_mode='HTML')
         else:
-            bot.send_message(chat_id=message.chat.id,
-                            text=f"✂️ Задача изменена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+            time_req = str(task[8])
+            if remake == True:
+                bot.send_message(chat_id=message.chat.id,
+                            text=f"⏳ Задача отложена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔃 {time_req}",
                             parse_mode='HTML')
+            else:
+                bot.send_message(chat_id=message.chat.id,
+                                text=f"✂️ Задача изменена\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔃 {time_req}",
+                                parse_mode='HTML')
+            
+        
+        
 
 
 def delete_task(message, task_id):
@@ -1842,11 +1888,11 @@ def update_evening_report(message, new=False):
             bot.send_message(
                 message.chat.id, "💫 Отлично! Теперь я полностью готов к работе!")
             bot.send_message(chat_id=message.chat.id,
-                             text="<strong>🎮 Гайд по работе с Workie_bot</strong>\n"
+                             text=f"<strong>🎮 Гайд по работе с {config.TITLE}</strong>\n"
                                     "1. Чтобы поставить задачу просто напиши <strong>текст + время + дата</strong>.\n"
                                     "<em>Например: Сделать презентацию 23 июня 15:00;</em>\n"
                                     "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
-                                    "3. В любом чате пиши @workie_bot и ставь задачи коллегам\n\n",
+                                    f"3. В любом чате пиши {config.NAME} и ставь задачи коллегам\n\n",
                              parse_mode='HTML',
                              reply_markup=main_menu_markup())
     else:
@@ -1916,7 +1962,8 @@ def show_birthdays(user_id, page=0):
         if user_data and user_data[4]: # Check if user and birth_date exists
             birthdays.append(user_data)
 
-    birthdays = sorted(birthdays, key=lambda x: x[4]) # Sort birthdays
+    # Sort birthdays using the helper function
+    birthdays = sorted(birthdays, key=lambda x: get_next_birthday(datetime.datetime.strptime(x[4], "%d.%m.%Y")))
 
     if not birthdays:
         bot.send_message(user_id, "Дни рождения не найдены")
