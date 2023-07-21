@@ -539,8 +539,13 @@ def callback_inline(call):
             field = call.data.replace("editprof_", "")
             field_dict = {"first_name": "Имя", "last_name": "Фамилия",
                           "nickname": "Ник", "birth_date": "День рождения"}
-            sent = bot.send_message(
-                call.message.chat.id, f"Введите новое значение для поля {field_dict[field]}")
+
+            if field_dict[field] == "День рождения":
+                text = f"Введите новое значение для поля {field_dict[field]} в формате дд.мм.гггг"
+            else:
+                text = f"Введите новое значение для поля {field_dict[field]}"
+
+            sent = bot.send_message(call.message.chat.id, text)
             bot.register_next_step_handler(sent, update_profile, field)
 
         elif call.data == "reports":
@@ -1012,8 +1017,8 @@ def view_tasks_for_others(call, page=0, id=0):
 
 def view_type_tasks_for_others(message, colleague_id, page=0, call=None, user_start=0):
     colleague_id = int(colleague_id)
-    pending_tasks = bd.get_tasks_by_status(colleague_id, 'pending')[1]
-    overdue_tasks = bd.get_tasks_by_status(colleague_id, 'overdue')[1]
+    pending_tasks = bd.get_tasks_by_status_and_user_added(colleague_id, 'pending', user_id_added = call.message.chat.id)[1]
+    overdue_tasks = bd.get_tasks_by_status_and_user_added(colleague_id, 'overdue', user_id_added = call.message.chat.id)[1]
 
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(types.InlineKeyboardButton(f'Активные ({pending_tasks})', callback_data=f'for_other|{colleague_id}|pending|{page}|{user_start}'),
@@ -1031,8 +1036,9 @@ def view_type_tasks_for_others(message, colleague_id, page=0, call=None, user_st
 
 def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, user_start=0):
     colleague_id = int(colleague_id)
-    user_id = message.from_user.id
-    tasks, total_tasks = bd.get_tasks_by_status(colleague_id, status, page)
+    user_id = call.message.chat.id
+    print(colleague_id, user_id)
+    tasks, total_tasks = bd.get_tasks_by_status_and_user_added(colleague_id, status, user_id, page)
 
     # Получите часовой пояс пользователя и коллеги
     user_timezone = bd.get_timezone_with_user_id(user_start)
@@ -1163,9 +1169,9 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
 
             buttons = []  # Start new row
             buttons.append(types.InlineKeyboardButton(
-                "❌ Удалить по номеру", callback_data=f'delete_mode_{status}_{page}'))
+                "❌ Удалить по №", callback_data=f'delete_mode_{status}_{page}'))
             buttons.append(types.InlineKeyboardButton(
-                "✂️ Изменить по номеру", callback_data=f'edit_mode_{status}_{page}'))
+                "✂️ Изменить по №", callback_data=f'edit_mode_{status}_{page}'))
         markup.add(*buttons)
         bot.send_message(chat_id, text, reply_markup=markup)
     else:
@@ -1288,8 +1294,6 @@ def process_task_step(message, task=None):
         else:
             task_text = task.text
 
-        print(task.deadline)
-
         if task.deadline == None:
             task_date_str, task_date = check_date_in_message(task_text)
             # Check for recurring task information in the text
@@ -1331,6 +1335,7 @@ def process_task_step(message, task=None):
 
         if task.user_id != chat_id:
             def hide_edit_button(chat_id, message_id, markup):
+                import time
                 time.sleep(30)  # Wait for 30 seconds
                 bot.edit_message_reply_markup(chat_id, message_id=message_id)
 
@@ -1342,11 +1347,19 @@ def process_task_step(message, task=None):
             threading.Thread(target=hide_edit_button, args=(chat_id, sent_message.message_id, markup)).start()
         else:
             def hide_edit_button(chat_id, message_id, markup):
+                import time
                 time.sleep(30)  # Wait for 30 seconds
                 bot.edit_message_reply_markup(chat_id, message_id=message_id)
 
+
+            time = task.deadline.strftime('в %H:%M')
+            if task.new_date:
+                time_req = '\n🔁 ' + str(task.new_date) + ' ' + time
+            else:
+                time_req = ""
+
             sent_message = bot.send_message(chat_id,
-                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
+                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)} {time_req}",
                             parse_mode='HTML',
                             reply_markup=markup)
     
@@ -2103,7 +2116,7 @@ def create_new_recurring_task():
             new_task.set_deadline(new_deadline.strftime("%Y-%m-%d %H:%M:%S"))
             bd.add_task(new_task)
             bd.delete_task(task_id)
-        time.sleep(60)
+        time.sleep(20)
 
 def send_daily_task_summary():
     while True:
@@ -2170,16 +2183,17 @@ def send_daily_task_summary():
         time.sleep(60)
 
 def send_task_notification_60s():
-    def remove_markup_after_15(messages):
-        for user_id, message_id in messages_dict.items():
+    def remove_markup_after_15(messages_to_remove_markup):
+        time.sleep(900)
+        new_markup = types.InlineKeyboardMarkup()  # create empty markup
+        for user_id, message_id in messages_to_remove_markup:
             try:
-                # Remove buttons from the message
-                new_markup = types.InlineKeyboardMarkup()  # create empty markup
                 bot.edit_message_reply_markup(chat_id=user_id, message_id=message_id, reply_markup=new_markup)
             except Exception as e:
                 print(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
 
-    messages_dict = []
+    messages_to_remove_markup = []
+
     while True:
         tasks = bd.get_all_tasks()
         for task in tasks:
@@ -2205,18 +2219,11 @@ def send_task_notification_60s():
                 msg = bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
                 
 
-                print(msg.message_id)
-                messages_dict.append((user_id, msg.message_id))
-        print(messages_dict)
+                messages_to_remove_markup.append((user_id, msg.message_id))
 
-
-
-        if messages_dict:
-            thread = threading.Thread(target=remove_markup_after_15, args=(messages_dict))
+        if messages_to_remove_markup:
+            thread = threading.Thread(target=remove_markup_after_15, args=(messages_to_remove_markup))
             thread.start()
-
-
-            messages_dict = []
 
         # Sleep for 60 seconds (1 minute) before checking again
         time.sleep(60)

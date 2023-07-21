@@ -308,6 +308,18 @@ def get_tasks_by_status(user_id, status, page=0, tasks_per_page=config.TASKS_PAG
     conn.close()
     return tasks, len(all_tasks)
 
+
+def get_tasks_by_status_and_user_added(user_id, status, user_id_added, page=0, tasks_per_page=config.TASKS_PAGE):
+    conn = sqlite3.connect(bd_name)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks WHERE user_id=? AND status=? AND user_id_added=? ORDER BY datetime(deadline) ASC", (user_id, status, user_id_added))
+    all_tasks = cursor.fetchall()
+    tasks = all_tasks[page * tasks_per_page:(page + 1) * tasks_per_page]
+    cursor.close()
+    conn.close()
+    return tasks, len(all_tasks)
+
+
 def get_due_tasks():
     conn = sqlite3.connect(bd_name)
     cursor = conn.cursor()
