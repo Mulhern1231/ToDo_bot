@@ -460,7 +460,7 @@ def city(message):
 
 @bot.message_handler(commands=['menu'])
 def menu(message):
-    bot.send_message(message.chat.id, '👇🏻',
+    bot.send_message(message.chat.id, 'Выберите действие:',
                      reply_markup=main_menu_markup())
 
 
@@ -1440,7 +1440,7 @@ def process_task_step(message, task=None):
                              parse_mode='HTML',
                              reply_markup=markup)
 
-        bot.send_message(chat_id, '👇🏻',
+        bot.send_message(chat_id, 'Выберите действие:',
                          reply_markup=main_menu_markup())
     except Exception as e:
         print(e)
@@ -1499,7 +1499,7 @@ def process_date_step(message, task):
 
         
 
-        bot.send_message(chat_id, '👇🏻',
+        bot.send_message(chat_id, 'Выберите действие:',
                          reply_markup=main_menu_markup())
     except Exception as e:
         print(e)
