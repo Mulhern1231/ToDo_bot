@@ -141,7 +141,7 @@ def check_date_in_message(message):
             elif re.match(r"\b(?:понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\s*\d{1,2}(:\d{2})?\b", date_str):
                 # Обработка дней недели и времени без предлога
                 day_of_week_str, time_str = date_str.split()[0], date_str.split()[1]
-                days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
+                days_of_week = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
                 days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
                 if days_shift < 0:
                     days_shift += 7
