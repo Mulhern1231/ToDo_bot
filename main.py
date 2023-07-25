@@ -94,8 +94,10 @@ def check_date_in_message(message):
 
     date_formats = [
         r"\b(?:во?|на)?\s*(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\s*\d{1,2}(:\d{2})?\b",  # В/на (день недели) HH(:MM)
+        r"\b(?:понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\s*\d{1,2}(:\d{2})?\b",  #(день недели) HH(:MM)
         r"\bчерез\s(?:\d+|один|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять)\s(?:дней|недель|месяцев|лет|дня|недели|неделю|месяц|года|год)(?:\s\d{2}:\d{2})?\b",
-        r"\bзавтра \d{1,2}:\d{2}\b",  # завтра HH:MM
+        r"\bзавтра \d{1,2}:\d{2}\b",
+        r"\bсегодня \d{1,2}:\d{2}\b",  # завтра HH:MM
         r"\bпослезавтра \d{1,2}:\d{2}\b",  # послезавтра в HH:MM
         r"\b(завтра|послезавтра) \d{1,2}\b",  # NEW FORMAT
         r"\b\d{1,2}\.\d{1,2}\s \s\d{1,2}:\d{2}\b",  # NEW FORMAT
@@ -136,6 +138,15 @@ def check_date_in_message(message):
                     days_shift += 7
                 hour, minute = int(time_str.split(':')[0]), int(time_str.split(':')[1]) if ':' in time_str else 0
                 date_obj = (datetime.datetime.now() + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute)
+            elif re.match(r"\b(?:понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\s*\d{1,2}(:\d{2})?\b", date_str):
+                # Обработка дней недели и времени без предлога
+                day_of_week_str, time_str = date_str.split()[0], date_str.split()[1]
+                days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
+                days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
+                if days_shift < 0:
+                    days_shift += 7
+                hour, minute = int(time_str.split(':')[0]), int(time_str.split(':')[1]) if ':' in time_str else 0
+                date_obj = (datetime.datetime.now() + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute)
             elif re.match(r"\bзавтра \d{1,2}:\d{2}\b", date_str) or re.match(r"\b(завтра|послезавтра) \d{1,2}\b", date_str):
                 # Обработка "завтра/послезавтра в HH" и "завтра/послезавтра на HH"
                 date_obj = dateparser_parse(date_str.replace(' в ', ' ').replace(' на ', ' ') +":00")
@@ -156,17 +167,23 @@ def check_date_in_message(message):
                 print(date_obj)
                 if date_obj is None:
                     continue              
-            elif date_str.startswith("завтра") and len(date_str.split(" в ")) == 2:
+            elif date_str.startswith("завтра") and len(date_str.split(" ")) == 2:
                 time_str = date_str.split(" ")[1]
                 date_obj = datetime.datetime.now() + datetime.timedelta(days=1)
                 date_obj = date_obj.replace(hour=int(time_str.split(':')[0]), minute=int(time_str.split(':')[1]))
-            elif date_str.startswith("послезавтра") and len(date_str.split(" в ")) == 2:
-                time_str = date_str.split(" в ")[1]
+            elif date_str.startswith("послезавтра") and len(date_str.split(" ")) == 2:
+                time_str = date_str.split(" ")[1]
                 date_obj = datetime.datetime.now() + datetime.timedelta(days=2)
                 date_obj = date_obj.replace(hour=int(time_str.split(':')[0]), minute=int(time_str.split(':')[1]))
-            elif date_str in ["завтра", "послезавтра"]:
+            elif date_str.startswith("сегодня") and len(date_str.split(" ")) == 2:
+                time_str = date_str.split(" ")[1]
+                date_obj = datetime.datetime.now()
+                date_obj = date_obj.replace(hour=int(time_str.split(':')[0]), minute=int(time_str.split(':')[1]))
+            elif date_str in ["завтра", "послезавтра", "сегодня"]:
                 if date_str == "завтра":
                     date_obj = datetime.datetime.now() + datetime.timedelta(days=1)
+                elif date_str == "сегодня":
+                    date_obj = datetime.datetime.now()
                 else:
                     date_obj = datetime.datetime.now() + datetime.timedelta(days=2)
             elif re.match(r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\b", date_str):
@@ -306,7 +323,7 @@ def check_date_in_message(message):
                     date_obj = date_obj + relativedelta(years=1)
 
             if date_obj:
-                if date_obj < datetime.datetime.now():
+                while date_obj < datetime.datetime.now():
                     date_obj = date_obj.replace(year = date_obj.year + 1)
 
                 for preposition in prepositions:
@@ -443,7 +460,7 @@ def city(message):
 
             bot.send_message(message.chat.id, f"Часовой пояс установлен: {timezone_name} (UTC{str(utc_offset)})")
             sent = bot.send_message(
-                message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список  задач на день (например 12:00).")
+                message.chat.id, "☕️ Теперь напиши время когда ты хочешь получать список задач на день (например 12:00).")
             bot.register_next_step_handler(sent, update_morning_plan, True)
         else:
             timezone_info = pytz.timezone(timezone_str)
@@ -812,7 +829,8 @@ def callback_inline(call):
 
             # Обновляем сообщение с новой разметкой и новым текстом
             task = bd.get_task(task_id)
-            new_message_text = f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task[3]))}</b>\n✏️ {str(task[2])}"
+            user_add = bd.get_user(task[7])
+            new_message_text = f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task[3]))}</b>\n✏️ {str(task[2])}\n👤 @{str(user_add[1])}"
             bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
@@ -1194,6 +1212,8 @@ def view_tasks(message, status, page=0, delete_mode=False, edit_mode=False, id=N
                 else:
                     time_req = str(task[8])
                     text += f"\n\n{idx}) 🔔 {normal_date(task[3])}\n✏️ {task[2]}"
+            if task[1] != task[7]:
+                text += f"\n👤 @{bd.get_user(task[7])[1]}"
 
                 
             text += "\n- - - - - - - - - - - - - - - - - - - - - - - -"
