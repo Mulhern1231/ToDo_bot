@@ -566,16 +566,19 @@ def callback_inline(call):
 
         elif call.data == "how_to_use":
             bot.edit_message_text(chat_id=call.message.chat.id,
-                                  message_id=call.message.message_id,
-                                  text=f"<strong>🎮 Гайд по работе с {config.TITLE}</strong>\n"
-                                    "1. Чтобы поставить задачу просто напиши <strong>текст + дата + время</strong>.\n"
-                                    "<em>Например: Сделать презентацию 23 июня 15:00;</em>\n"
-                                    "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
-                                    "3. Не забудь настроить время для получения ежедневных отчетов утром и вечером;\n"
-                                    f"4. В любом чате пиши {config.NAME} и ставь задачи коллегам;\n"
-                                    f"5. Есть у тебя есть идеи/предложения для {config.NAME}, смело пиши боту {config.NAME_SECOND_BOT}.\n\n"
-                                    "Спасибо, что ты с Workie!",
-                                  parse_mode='HTML',)
+                        message_id=call.message.message_id,
+                        text=f"<strong>🎮 Гайд по работе с Workie Bot</strong>\n"
+                            "1. Чтобы поставить задачу себе, просто напиши <strong>текст + дата + время</strong>.\n"
+                            "<em>Например: Сделать презентацию 23 июня 15:00;</em>\n"
+                            "2. Чтобы поставить задачу коллеге, напиши <strong>@никнейм + текст + дата + время</strong>.\n"
+                            "<em>Например: @xxx провести встречу завтра 13:45;</em>\n"
+                            "3. Для удобства используй слова \"сегодня\", \"завтра\", \"послезавтра\" или конкретный день недели;\n"
+                            "4. Чтобы создать повторяющуюся задачу, напиши <strong>текст + \"каждую неделю/месяц/среду\" + время</strong>.\n"
+                            "<em>Например: Сделать платеж каждый месяц 12:30;</em>\n"
+                            f"5. Свои идеи и предложения отправляйте сюда: {config.NAME_SECOND_BOT}.\n\n"
+                            "Спасибо, что вы с Workie Bot!",
+                        parse_mode='HTML',)
+
         elif call.data.startswith("birthdays_list"):
             _, _, id = call.data.split("_")
             show_birthdays(id)
@@ -830,7 +833,18 @@ def callback_inline(call):
             # Обновляем сообщение с новой разметкой и новым текстом
             task = bd.get_task(task_id)
             user_add = bd.get_user(task[7])
-            new_message_text = f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task[3]))}</b>\n✏️ {str(task[2])}\n👤 @{str(user_add[1])}"
+
+            input_format = '%Y-%m-%d %H:%M:%S'
+            datetime_obj = datetime.datetime.strptime(task[3], input_format)
+
+            # Now you can use strftime() on the datetime_obj
+            time = datetime_obj.strftime('в %H:%M')
+            if task[8]:
+                time_req = '\n🔁 ' + str(task[8]) + ' ' + time
+            else:
+                time_req = ""
+
+            new_message_text = f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task[3]))}</b>\n✏️ {str(task[2])} {time_req}\n👤 @{str(user_add[1])}"
             bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
@@ -1413,8 +1427,15 @@ def process_task_step(message, task=None):
                 time.sleep(30)  # Wait for 30 seconds
                 bot.edit_message_reply_markup(chat_id, message_id=message_id)
 
+
+            time = task.deadline.strftime('в %H:%M')
+            if task.new_date:
+                time_req = '\n🔁 ' + str(task.new_date) + ' ' + time
+            else:
+                time_req = ""
+
             sent_message = bot.send_message(chat_id,
-                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}\n👤 @{str(bd.get_user(task.user_id)[1])}",
+                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)} {time_req} \n👤 @{str(bd.get_user(task.user_id)[1])}",
                             parse_mode='HTML',
                             reply_markup=markup)
         
@@ -1455,8 +1476,14 @@ def process_task_step(message, task=None):
             accept = types.InlineKeyboardButton('Принять задачу 🤝', callback_data=f'accepttask_{taskID}')
             markup.add(accept)
 
+            time = task.deadline.strftime('в %H:%M')
+            if task.new_date:
+                time_req = '\n🔁 ' + str(task.new_date) + ' ' + time
+            else:
+                time_req = ""
+
             bot.send_message(task.user_id,
-                             text=f"от @{bd.get_user(chat_id)[1]}\n\n🔔 <b>{normal_date(str(time_second))} </b>\n✏️ {str(task.text)}",
+                             text=f"от @{bd.get_user(chat_id)[1]}\n\n🔔 <b>{normal_date(str(time_second))} </b>\n✏️ {str(task.text)} {time_req}",
                              parse_mode='HTML',
                              reply_markup=markup)
 
@@ -1904,22 +1931,25 @@ def update_profile(message, field):
     text = message.text
     if field == "first_name":
         bd.update_user_first_name(message.chat.id, text)
+        bot.send_message(message.chat.id, "Данные успешно обновлены!")
     elif field == "last_name":
         bd.update_user_last_name(message.chat.id, text)
+        bot.send_message(message.chat.id, "Данные успешно обновлены!")
     elif field == "nickname":
         bd.update_user_nickname(message.chat.id, text)
+        bot.send_message(message.chat.id, "Данные успешно обновлены!")
     elif field == "birth_date":
-        date_str, date_obj_str = check_date_in_message(text)
-        if date_obj_str:
-            date_obj = datetime.datetime.strptime(
-                date_obj_str, "%Y-%m-%d %H:%M:%S")
-            bd.update_user_birth_date(
-                message.chat.id, date_obj.strftime("%d.%m.%Y"))
+        # Поиск даты в формате dd.mm.yyyy
+        date_match = re.search(r'\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b', text)
+        if date_match:
+            # Преобразование найденного текста в объект datetime
+            date_obj = datetime.datetime.strptime(date_match.group(), '%d.%m.%Y')
+            bd.update_user_birth_date(message.chat.id, date_obj.strftime("%d.%m.%Y"))
+            bot.send_message(message.chat.id, "Данные успешно обновлены!")
         else:
-            bot.send_message(
-                message.chat.id, "📅 Пожалуйста, напиши дату и время задачи.")
-            return
-    bot.send_message(message.chat.id, "Данные успешно обновлены!")
+            sent = bot.send_message(message.chat.id, "📅 Пожалуйста, напиши дату рождения в формате dd.mm.yyyy.")
+            bot.register_next_step_handler(sent, update_profile, "birth_date")
+
 
 
 # Отчеты
@@ -1972,11 +2002,16 @@ def update_evening_report(message, new=False):
             bot.send_message(
                 message.chat.id, "💫 Отлично! Теперь я полностью готов к работе!")
             bot.send_message(chat_id=message.chat.id,
-                             text=f"<strong>🎮 Гайд по работе с {config.TITLE}</strong>\n"
-                                    "1. Чтобы поставить задачу просто напиши <strong>текст + дата + время</strong>.\n"
+                             text=f"<strong>🎮 Гайд по работе с Workie Bot</strong>\n"
+                                    "1. Чтобы поставить задачу себе, просто напиши <strong>текст + дата + время</strong>.\n"
                                     "<em>Например: Сделать презентацию 23 июня 15:00;</em>\n"
-                                    "2. Для удобства используй слова \"завтра\", \"послезавтра\", \"каждую неделю/месяц/среду\";\n"
-                                    f"3. В любом чате пиши {config.NAME} и ставь задачи коллегам\n\n",
+                                    "2. Чтобы поставить задачу коллеге, напиши <strong>@никнейм + текст + дата + время</strong>.\n"
+                                    "<em>Например: @xxx провести встречу завтра 13:45;</em>\n"
+                                    "3. Для удобства используй слова \"сегодня\", \"завтра\", \"послезавтра\" или конкретный день недели;\n"
+                                    "4. Чтобы создать повторяющуюся задачу, напиши <strong>текст + \"каждую неделю/месяц/среду\" + время</strong>.\n"
+                                    "<em>Например: Сделать платеж каждый месяц 12:30;</em>\n"
+                                    f"5. Свои идеи и предложения отправляйте сюда: {config.NAME_SECOND_BOT}.\n\n"
+                                    "Спасибо, что вы с Workie Bot!",
                              parse_mode='HTML',
                              reply_markup=main_menu_markup())
     else:
