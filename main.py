@@ -134,7 +134,7 @@ def check_date_in_message(message):
                 day_of_week_str, time_str = date_str.split()[0], date_str.split()[1]
                 days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
                 days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
-                if days_shift < 0:
+                if days_shift <= 0:
                     days_shift += 7
                 hour, minute = int(time_str.split(':')[0]), int(time_str.split(':')[1]) if ':' in time_str else 0
                 date_obj = (datetime.datetime.now() + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute)
@@ -143,7 +143,7 @@ def check_date_in_message(message):
                 day_of_week_str, time_str = date_str.split()[0], date_str.split()[1]
                 days_of_week = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
                 days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
-                if days_shift < 0:
+                if days_shift <= 0:
                     days_shift += 7
                 hour, minute = int(time_str.split(':')[0]), int(time_str.split(':')[1]) if ':' in time_str else 0
                 date_obj = (datetime.datetime.now() + datetime.timedelta(days=days_shift)).replace(hour=hour, minute=minute)
@@ -191,7 +191,7 @@ def check_date_in_message(message):
                 day_of_week_str = date_str.split()[0]
                 days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
                 days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
-                if days_shift < 0:
+                if days_shift <= 0:
                     days_shift += 7
                 date_obj = datetime.datetime.now() + datetime.timedelta(days=days_shift)
             elif re.match(r"\b(?:сегодня|завтра|послезавтра)\b", date_str):
