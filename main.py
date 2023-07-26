@@ -93,7 +93,7 @@ def check_date_in_message(message):
     message = message.lower()
 
     date_formats = [
-        r"\b(?:во?|на)?\s*(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\s*\d{1,2}(:\d{2})?\b",  # В/на (день недели) HH(:MM)
+        r"\b(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\s*\d{1,2}(:\d{2})?\b",  # В/на (день недели) HH(:MM)
         r"\b(?:понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\s*\d{1,2}(:\d{2})?\b",  #(день недели) HH(:MM)
         r"\bчерез\s(?:\d+|один|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять)\s(?:дней|недель|месяцев|лет|дня|недели|неделю|месяц|года|год)(?:\s\d{2}:\d{2})?\b",
         r"\bзавтра \d{1,2}:\d{2}\b",
@@ -115,7 +115,7 @@ def check_date_in_message(message):
         r"\bзавтра\b",
         r"\bпослезавтра\b",
         r"\bчерез\s(?:неделю|месяц|год|полгода)\b",
-        r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\b",  # В понедельник, Во вторник, и т.д.
+        r"\b(?:понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\b",  # В понедельник, Во вторник, и т.д.
         r"\b(?:сегодня|завтра|послезавтра)\b",  # Сегодня, Завтра, Послезавтра
         r"\bчерез\s(?:\d+|один|два|две|три|четыре|пять|шесть|семь|восемь|девять|десять)\s(?:дней|недель|месяцев|лет|дня|недели|неделю|месяц|года|год)\b",  # Через N дней/недель/месяцев/лет
         r"\bв\s\d{1,2}\b"  # В 15
@@ -129,9 +129,9 @@ def check_date_in_message(message):
             date_str = match.group(0)
             date_str_with_preposition = None
             
-            if re.match(r"\b(?:во?|на)?\s*(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\s*\d{1,2}(:\d{2})?\b", date_str):
+            if re.match(r"\b(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\s*\d{1,2}(:\d{2})?\b", date_str):
                 # Обработка дней недели и времени
-                day_of_week_str, time_str = date_str.split()[-2], date_str.split()[-1]
+                day_of_week_str, time_str = date_str.split()[0], date_str.split()[1]
                 days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
                 days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
                 if days_shift < 0:
@@ -186,9 +186,9 @@ def check_date_in_message(message):
                     date_obj = datetime.datetime.now()
                 else:
                     date_obj = datetime.datetime.now() + datetime.timedelta(days=2)
-            elif re.match(r"\b(?:во?|на)\s(?:понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье)\b", date_str):
+            elif re.match(r"\b(?:понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\b", date_str):
                 # Обработка дней недели
-                day_of_week_str = date_str.split()[1]
+                day_of_week_str = date_str.split()[0]
                 days_of_week = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
                 days_shift = days_of_week.index(day_of_week_str) - datetime.datetime.today().weekday()
                 if days_shift < 0:
@@ -1404,6 +1404,7 @@ def process_task_step(message, task=None):
             task.text = task_text.strip()
 
         recurring_task = check_recurring_in_message(task_text)
+        print(recurring_task, task_text)
         if recurring_task is not None:
             task_text = task_text.replace(recurring_task, '')
             task.text = task_text.strip()
@@ -1769,7 +1770,7 @@ def handle_task(message):
         if bd.is_user_in_db(message.from_user.id):
             if config.NAME in message.text:
                 task_text = message.text.replace(config.NAME, '')
-                task_datetime_str = message.text
+                task_datetime_str = message.textrecurring_task
 
                 # Parsing the date and time string into a datetime object
                 task_datetime_str, task_datetime = check_date_in_message(
@@ -1856,8 +1857,8 @@ def handle_task(message):
                     message.chat.id, f"от {config.NAME}\n\n🔔 {task_datetime_obj.strftime('%d.%m.%Y %H:%M')} ({mon})\n✏️ {task_text}", reply_markup=markup)
             else:
                 task_text = message.text
-                date_str, task_date_str = check_date_in_message(task_text)
 
+                
                 match = re.search(r'@(\w+)', task_text)
 
                 if match:
@@ -1874,10 +1875,25 @@ def handle_task(message):
                     chat_id = message.chat.id
                     task = bd.Task(chat_id, None)
 
+
+                recurring_task = check_recurring_in_message(task_text)
+                if recurring_task is not None:
+                    recurring_task = recurring_task.split(' ')
+                    task.new_date = ' '.join(recurring_task)
+
+                    recurring_task = ' '.join(recurring_task)
+                    days = ["понедельник", "вторник", "среду", "четверг", "пятницу", "субботу", "воскресенье"]
+                    for day in days:
+                        recurring_task = recurring_task.replace(day, "")
+                    task_text = task_text.replace(recurring_task, '')
+                    
+                print(task_text)
+                date_str, task_date_str = check_date_in_message(task_text)
                 if date_str:
                     task.text = task_text.replace(date_str, "")
                 else:
                     task.text = task_text
+                print(task_date_str)
                 
                 task.set_user_id_added(message.from_user.id)
 
@@ -2070,59 +2086,6 @@ def location(message):
 
 
 # Справка
-
-# def show_birthdays(user_id, page=0):
-#     import bd
-#     colleague_ids = bd.get_colleagues_list(user_id) # Get the list of colleague IDs
-
-#     birthdays = [] # We'll store colleague birthdays here
-
-#     for cid in colleague_ids:
-#         user_data = bd.get_user(cid)
-#         if user_data and user_data[4]: # Check if user and birth_date exists
-#             birthdays.append(user_data)
-
-#     # Sort birthdays using the helper function
-#     birthdays = sorted(birthdays, key=lambda x: get_next_birthday(datetime.datetime.strptime(x[4], "%d.%m.%Y")))
-
-#     if not birthdays:
-#         bot.send_message(user_id, "Дни рождения не найдены")
-#     else:
-#         pages = math.ceil(len(birthdays) / TASKS_PER_PAGE)
-#         message = "🎂 Дни рождения\n\n"
-#         for idx, bd in enumerate(birthdays[page*TASKS_PER_PAGE:(page+1)*TASKS_PER_PAGE]):
-#             birth_date = datetime.datetime.strptime(bd[4], "%d.%m.%Y")  # Convert string to datetime object
-#             mon = birth_date.strftime('%B')
-#             months = {
-#                 "January": "января", "February": "февраля", "March": "марта", "April": "апреля",
-#                 "May": "мая", "June": "июня", "July": "июля", "August": "августа",
-#                 "September": "сентября", "October": "октября", "November": "ноября", "December": "декабря"
-#             }
-#             for eng, rus in months.items():
-#                 mon = mon.replace(eng, rus)
-
-#             today = datetime.datetime.now()
-#             age = today.year - birth_date.year
-            
-#             if bd[3]:
-#                 message += f"{bd[2]} {bd[3]}: <strong>{birth_date.day} {mon} {birth_date.year} ({age}) </strong>\n\n"
-#             else:
-#                 message += f"{bd[2]}: <strong>{birth_date.day} {mon} {birth_date.year} ({age}) </strong>\n\n"
-
-
-#         if len(birthdays) > TASKS_PER_PAGE:
-#             markup = types.InlineKeyboardMarkup(row_width=2)
-#             buttons = []
-#             if page > 0:
-#                 buttons.append(types.InlineKeyboardButton(
-#                     "<", callback_data=f'viewbirthdays_{user_id}_{page-1}'))
-#             if page < pages - 1:
-#                 buttons.append(types.InlineKeyboardButton(
-#                     ">", callback_data=f'viewbirthdays_{user_id}_{page+1}'))
-#             markup.add(*buttons)
-#             bot.send_message(user_id, message, reply_markup=markup, parse_mode='HTML')
-#         else:
-#             bot.send_message(user_id, message, parse_mode='HTML')
 
 def show_birthdays(user_id, page=0):
     import bd
