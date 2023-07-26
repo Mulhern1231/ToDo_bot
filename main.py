@@ -618,8 +618,9 @@ def callback_inline(call):
                 text = f"Введите новое значение для поля {field_dict[field]} в формате дд.мм.гггг"
             else:
                 text = f"Введите новое значение для поля {field_dict[field]}"
-
-            sent = bot.send_message(call.message.chat.id, text)
+            
+            a = telebot.types.ReplyKeyboardRemove()
+            sent = bot.send_message(call.message.chat.id, text, reply_markup=a)
             bot.register_next_step_handler(sent, update_profile, field)
 
         elif call.data == "reports":
@@ -1945,7 +1946,7 @@ def update_profile(message, field):
             # Преобразование найденного текста в объект datetime
             date_obj = datetime.datetime.strptime(date_match.group(), '%d.%m.%Y')
             bd.update_user_birth_date(message.chat.id, date_obj.strftime("%d.%m.%Y"))
-            bot.send_message(message.chat.id, "Данные успешно обновлены!")
+            bot.send_message(message.chat.id, "Данные успешно обновлены!", reply_markup=, reply_markup=main_menu_markup())
         else:
             sent = bot.send_message(message.chat.id, "📅 Пожалуйста, напиши дату рождения в формате dd.mm.yyyy.")
             bot.register_next_step_handler(sent, update_profile, "birth_date")
