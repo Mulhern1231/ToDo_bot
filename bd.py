@@ -384,10 +384,14 @@ def update_user_time_task_2(user_id, time):
     conn.close()
 
 def get_completed_tasks(user_id):
+    # Get current date and format it as a string
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+
     conn = sqlite3.connect(bd_name)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM tasks WHERE user_id = ? AND status = 'done'", (user_id,))
+    # Include date in SQL query
+    cursor.execute("SELECT * FROM tasks WHERE user_id = ? AND status = 'done' AND date(deadline) = ?", (user_id, today))
     completed_tasks = cursor.fetchall()
 
     conn.close()

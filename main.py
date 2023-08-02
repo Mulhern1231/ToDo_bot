@@ -792,20 +792,20 @@ def callback_inline(call):
                 if task[8] == None:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                             message_id=call.message.message_id,
-                                            text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+                                            text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
                                             parse_mode='HTML')
                     else:
                         time_req = str(task[8])
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                             message_id=call.message.message_id,
-                                            text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                            text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                             parse_mode='HTML')
                         
             else:
@@ -845,7 +845,7 @@ def callback_inline(call):
             else:
                 time_req = ""
 
-            new_message_text = f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task[3]))}</b>\n✏️ {str(task[2])} {time_req}\n👤 @{str(user_add[1])}"
+            new_message_text = f"⚡ Задача запланирована\n\n🔔 <b>{normal_date(str(task[3]))}</b>\n✏️ {str(task[2])} {time_req}\n👤 @{str(user_add[1])}"
             bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
@@ -909,20 +909,20 @@ def callback_inline(call):
                 if task[8] == None:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
                                           parse_mode='HTML')
                     else:
                         time_req = str(task[8])
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
                         
 
@@ -969,20 +969,20 @@ def callback_inline(call):
                 if task[8] == None:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
                                           parse_mode='HTML')
                     else:
                         time_req = str(task[8])
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
 
             elif action == "tmrw":
@@ -1028,20 +1028,20 @@ def callback_inline(call):
                 if task[8] == None:
                     bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
                 else:
                     if task[8].split()[0] != 'на':
                         time_req = str(task[8]) + ' ' + time
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}\n🔁 {time_req}",
                                           parse_mode='HTML')
                     else:
                         time_req = str(task[8])
                         bot.edit_message_text(chat_id=call.message.chat.id,
                                           message_id=call.message.message_id,
-                                          text=f"🔋 Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
+                                          text=f"⚡ Задача запланирована\n\n🔔 <b>{str(formatted_datetime)} </b>\n✏️ {str(task_text)}",
                                           parse_mode='HTML')
                         
             elif action == "other":
@@ -1437,7 +1437,7 @@ def process_task_step(message, task=None):
                 time_req = ""
 
             sent_message = bot.send_message(chat_id,
-                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)} {time_req} \n👤 @{str(bd.get_user(task.user_id)[1])}",
+                            text=f"⚡ Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)} {time_req} \n👤 @{str(bd.get_user(task.user_id)[1])}",
                             parse_mode='HTML',
                             reply_markup=markup)
         
@@ -1456,7 +1456,7 @@ def process_task_step(message, task=None):
                 time_req = ""
 
             sent_message = bot.send_message(chat_id,
-                            text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)} {time_req}",
+                            text=f"⚡ Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)} {time_req}",
                             parse_mode='HTML',
                             reply_markup=markup)
     
@@ -1540,7 +1540,7 @@ def process_date_step(message, task):
             bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
 
         sent_message = bot.send_message(chat_id,
-                         text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
+                         text=f"⚡ Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
                          parse_mode='HTML',
                          reply_markup=markup)
     
@@ -1584,7 +1584,7 @@ def process_file_step(message, task):
                 bot.edit_message_reply_markup(chat_id, message_id=message_id, reply_markup=markup)
 
             sent_message = bot.send_message(chat_id,
-                             text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
+                             text=f"⚡ Задача запланирована\n\n🔔 <b>{normal_date(str(task.deadline))} </b>\n✏️ {str(task.text)}",
                              parse_mode='HTML',
                              reply_markup=markup)
         
@@ -1607,7 +1607,7 @@ def process_file_step(message, task):
                     time_second = task.deadline
 
                 bot.send_message(task.user_id,
-                                 text=f"🔋 Задача запланирована\n\n🔔 <b>{normal_date(str(time_second))} </b>\n✏️ {str(task.text)}",
+                                 text=f"⚡ Задача запланирована\n\n🔔 <b>{normal_date(str(time_second))} </b>\n✏️ {str(task.text)}",
                                  parse_mode='HTML',
                                  reply_markup=markup)
 
@@ -1632,7 +1632,7 @@ def save_file_id(message, task):
         task.timezone = bd.get_timezone_with_user_id(task.user_id)
         bd.add_task(task)
         bot.send_message(chat_id,
-                         text=f"🔋 Задача запланирована\n\n🔔 <b>{str(task.deadline)} </b>\n✏️ {str(task.text)}",
+                         text=f"⚡ Задача запланирована\n\n🔔 <b>{str(task.deadline)} </b>\n✏️ {str(task.text)}",
                          parse_mode='HTML',
                          reply_markup=main_menu_markup())
 
@@ -2185,7 +2185,7 @@ def send_task_notification():
                 "✅ Готово", callback_data=f'deadline|done|{task_id}')
             markup.add(one_hour, three_hours, tomorrow, other_time, done)
 
-            msg = bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
+            msg = bot.send_message(user_id, f"🔥 {task_text}", reply_markup=markup)
             messages_to_remove_markup.append((user_id, msg.message_id))
 
         time.sleep(900)
@@ -2270,7 +2270,9 @@ def send_daily_task_summary():
                 converted_time_datetime = datetime.datetime.strptime(
                     converted_time, "%Y-%m-%d %H:%M:%S")
 
-                if converted_time_datetime - datetime.timedelta(seconds=20) <= now <= converted_time_datetime + datetime.timedelta(seconds=20):
+                print(converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25))
+                print(converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
+                if converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25):
                     view_tasks(None, status='pending', id=user_id)
 
                     ### оповещения о днях рождения
@@ -2288,7 +2290,8 @@ def send_daily_task_summary():
                                     bot.send_message(user_id, f"Сегодня у {user_data[2]} {user_data[3]} день рождения! Исполняется {age} лет.")
                                 else:
                                     bot.send_message(user_id, f"Сегодня у {user_data[2]} день рождения! Исполняется {age} лет.")
-            except:
+            except Exception as e:
+                print("Утрений план: ERROR: send_daily_task_summary." + str(e))
                 pass
 
             try:
@@ -2306,9 +2309,10 @@ def send_daily_task_summary():
                 converted_time_datetime = converted_time_datetime.replace(
                     year=now.year, month=now.month, day=now.day)
 
-                if (converted_time_datetime - datetime.timedelta(seconds=20)).time() <= now.time() <= (converted_time_datetime + datetime.timedelta(seconds=20)).time():
+                if (converted_time_datetime - datetime.timedelta(seconds=25)).time() <= now.time() <= (converted_time_datetime + datetime.timedelta(seconds=25)).time():
                     task_done(user_id, page=0)
-            except:
+            except Exception as e:
+                print("Вечерений план: ERROR: send_daily_task_summary." + str(e))
                 pass
         time.sleep(60)
 
@@ -2337,7 +2341,8 @@ def send_task_notification_60s():
             now = datetime.datetime.now()
 
             # Check if the current time is within the required range
-            if converted_time_datetime - datetime.timedelta(seconds=20) <= now <= converted_time_datetime + datetime.timedelta(seconds=20):
+            print(converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25), '------------', converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
+            if converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25):
                 markup = types.InlineKeyboardMarkup(row_width=2)
                 one_hour = types.InlineKeyboardButton("1 час", callback_data=f'deadline|1hour|{task_id}')
                 three_hours = types.InlineKeyboardButton("3 часа", callback_data=f'deadline|3hours|{task_id}')
@@ -2346,7 +2351,7 @@ def send_task_notification_60s():
                 done = types.InlineKeyboardButton("✅ Готово", callback_data=f'deadline|done|{task_id}')
                 markup.add(one_hour, three_hours, tomorrow, other_time, done)
 
-                msg = bot.send_message(user_id, f"🪫 {task_text}", reply_markup=markup)
+                msg = bot.send_message(user_id, f"🔥 {task_text}", reply_markup=markup)
                 
 
                 messages_to_remove_markup.append((user_id, msg.message_id))
