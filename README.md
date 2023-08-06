@@ -9,20 +9,11 @@ ToDo_bot - это бот для Telegram, предназначенный для 
 ```sh
 git clone https://github.com/Mulhern1231/ToDo_bot.git
 ```
-2) Создание виртуального окружения:
-```sh
-python -m venv venv
-```
-3) Активация виртуального окружения:
-- На Unix или MacOS:
-```sh
-source venv/bin/activate
-```
-4) Установка необходимых библиотек:
+2) Установка необходимых библиотек:
 ```sh
 pip install -r requirements.txt
 ```
-5) Запуск бота:
+3) Запуск бота:
 ```sh
 python main.py
 ```
