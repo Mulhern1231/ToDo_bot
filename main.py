@@ -2182,39 +2182,42 @@ def polling():
 
 def send_task_notification():
     while True:
-        tasks = bd.get_due_tasks()
-        messages_to_remove_markup = []
-        if not tasks:
-            log_to_file("send_task_notification: Нет задач")
-        for task in tasks:
-            log_to_file(f"send_task_notification: {task}")
-            task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
+        try:
+            tasks = bd.get_due_tasks()
+            messages_to_remove_markup = []
+            if not tasks:
+                log_to_file("send_task_notification: Нет задач")
+            for task in tasks:
+                log_to_file(f"send_task_notification: {task}")
+                task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
 
-            markup = types.InlineKeyboardMarkup(row_width=2)
-            one_hour = types.InlineKeyboardButton(
-                "1 час", callback_data=f'deadline|1hour|{task_id}')
-            three_hours = types.InlineKeyboardButton(
-                "3 часа", callback_data=f'deadline|3hours|{task_id}')
-            tomorrow = types.InlineKeyboardButton(
-                "Завтра", callback_data=f'deadline|tmrw|{task_id}')
-            other_time = types.InlineKeyboardButton(
-                "Другое время", callback_data=f'deadline|other|{task_id}')
-            done = types.InlineKeyboardButton(
-                "✅ Готово", callback_data=f'deadline|done|{task_id}')
-            markup.add(one_hour, three_hours, tomorrow, other_time, done)
+                markup = types.InlineKeyboardMarkup(row_width=2)
+                one_hour = types.InlineKeyboardButton(
+                    "1 час", callback_data=f'deadline|1hour|{task_id}')
+                three_hours = types.InlineKeyboardButton(
+                    "3 часа", callback_data=f'deadline|3hours|{task_id}')
+                tomorrow = types.InlineKeyboardButton(
+                    "Завтра", callback_data=f'deadline|tmrw|{task_id}')
+                other_time = types.InlineKeyboardButton(
+                    "Другое время", callback_data=f'deadline|other|{task_id}')
+                done = types.InlineKeyboardButton(
+                    "✅ Готово", callback_data=f'deadline|done|{task_id}')
+                markup.add(one_hour, three_hours, tomorrow, other_time, done)
 
-            msg = bot.send_message(user_id, f"🔥 {task_text}", reply_markup=markup)
-            messages_to_remove_markup.append((user_id, msg.message_id))
+                msg = bot.send_message(user_id, f"🔥 {task_text}", reply_markup=markup)
+                messages_to_remove_markup.append((user_id, msg.message_id))
 
-        time.sleep(900)
+            time.sleep(900)
 
-        # remove buttons from the message
-        new_markup = types.InlineKeyboardMarkup()  # create empty markup
-        for user_id, message_id in messages_to_remove_markup:
-            try:
-                bot.edit_message_reply_markup(chat_id=user_id, message_id=message_id, reply_markup=new_markup)
-            except Exception as e:
-                log_to_file(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
+            # remove buttons from the message
+            new_markup = types.InlineKeyboardMarkup()  # create empty markup
+            for user_id, message_id in messages_to_remove_markup:
+                try:
+                    bot.edit_message_reply_markup(chat_id=user_id, message_id=message_id, reply_markup=new_markup)
+                except Exception as e:
+                    log_to_file(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
+        except Exception as e:
+            continue
 
 
 def create_new_recurring_task():
