@@ -25,6 +25,27 @@ from dateparser import parse as dateparser_parse
 from dateutil.relativedelta import relativedelta
 
 
+
+
+def log_to_file(*messages, filename='log.txt'):
+    # Join all messages into a single string
+    message = ' '.join(map(str, messages))
+
+    # Get the current time and format it
+    current_time = datetime.datetime.now().strftime('%d.%m.%Y %H:%M')
+
+    # Print the message to the console
+    print(message)
+
+    # Write the message to the file, prefixing it with the current time
+    with open(filename, 'a') as file:
+        file.write(f'{current_time} - {message}\n')
+
+
+
+
+
+
 TASKS_PER_PAGE = config.TASKS_PAGE
 bot = telebot.TeleBot(config.TOKEN)
 
@@ -164,7 +185,7 @@ def check_date_in_message(message):
                 date_str = date_str.replace(' в ', ' ')
                 date_obj = dateparser_parse(date_str)
 
-                print(date_obj)
+                log_to_file(date_obj)
                 if date_obj is None:
                     continue              
             elif date_str.startswith("завтра") and len(date_str.split(" ")) == 2:
@@ -553,7 +574,7 @@ def back_to_main(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     try:
-        print(call.data)
+        log_to_file(call.data)
         # кнопки
         if call.data.startswith("my_tasks"):
             _, _, id = call.data.split("_")
@@ -877,7 +898,7 @@ def callback_inline(call):
 
                 # заменяем часы, минуты, секунды и микросекунды на 0 для tas и new_deadline_aa
                 day = calculate_time_diff(tas, new_deadline)
-                print(day)
+                log_to_file(day)
                 bd.edit_new_date(task_id, day)
 
                 # Получаем информацию о задаче
@@ -1054,7 +1075,7 @@ def callback_inline(call):
                 bot.send_message(call.message.chat.id, f'✅ {task[2]}')
 
     except Exception as e:
-        print(e, ' | call.data: ', call.data)
+        log_to_file(e, ' | call.data: ', call.data)
 
 
 # просмотр задач коллег
@@ -1124,7 +1145,7 @@ def view_type_tasks_for_others(message, colleague_id, page=0, call=None, user_st
 def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, user_start=0):
     colleague_id = int(colleague_id)
     user_id = call.message.chat.id
-    print(colleague_id, user_id)
+    log_to_file(colleague_id, user_id)
     tasks, total_tasks = bd.get_tasks_by_status_and_user_added(colleague_id, status, user_id, page)
 
     # Получите часовой пояс пользователя и коллеги
@@ -1142,7 +1163,7 @@ def view_tasks_for_other_user(message, colleague_id, status, page=0, call=None, 
             # Преобразование времени задачи в часовой пояс пользователя
             converted_time = convert_timezone(task[3], task[6], user_timezone)
 
-            print(task[3], task[6], user_timezone, converted_time)
+            log_to_file(task[3], task[6], user_timezone, converted_time)
 
             if task[8] == None:
                 text += f"\n\n{idx}) 🔔 {normal_date(converted_time)}\n✏️ {task[2]}"
@@ -1321,9 +1342,9 @@ def task_done(user_id, page=0):
         bot.send_message(user_id, "Выполненных задач не найдено")
     else:
         pages = math.ceil(len(tasks) / TASKS_PER_PAGE)
-        print(page*TASKS_PER_PAGE)
-        print((page+1)*TASKS_PER_PAGE)
-        print(len(tasks[page*TASKS_PER_PAGE:(page+1)*TASKS_PER_PAGE]))
+        log_to_file(page*TASKS_PER_PAGE)
+        log_to_file((page+1)*TASKS_PER_PAGE)
+        log_to_file(len(tasks[page*TASKS_PER_PAGE:(page+1)*TASKS_PER_PAGE]))
 
         message = "🍾 Выполненные задачи за сегодня\n\n"
         for idx, task in enumerate(tasks[page*TASKS_PER_PAGE:(page+1)*TASKS_PER_PAGE]):
@@ -1370,7 +1391,7 @@ def process_user_step(message):
         msg = bot.send_message(message.chat.id, "Отправьте текст задачи")
         bot.register_next_step_handler(msg, process_task_step, task)
     except Exception as e:
-        print(e)
+        log_to_file(e)
         bot.reply_to(message, 'oooops')
 
 
@@ -1404,7 +1425,7 @@ def process_task_step(message, task=None):
             task.text = task_text.strip()
 
         recurring_task = check_recurring_in_message(task_text)
-        print(recurring_task, task_text)
+        log_to_file(recurring_task, task_text)
         if recurring_task is not None:
             task_text = task_text.replace(recurring_task, '')
             task.text = task_text.strip()
@@ -1471,7 +1492,7 @@ def process_task_step(message, task=None):
                 time_second = str(convert_timezone(
                     time_first, timezone_first, timezone_second))
             except Exception as e:
-                print(e)
+                log_to_file(e)
                 time_second = task.deadline
 
             markup = types.InlineKeyboardMarkup()
@@ -1492,7 +1513,7 @@ def process_task_step(message, task=None):
         bot.send_message(chat_id, 'Выберите действие:',
                          reply_markup=main_menu_markup())
     except Exception as e:
-        print(e)
+        log_to_file(e)
         bot.reply_to(message, 'oooops')
 
 
@@ -1551,7 +1572,7 @@ def process_date_step(message, task):
         bot.send_message(chat_id, 'Выберите действие:',
                          reply_markup=main_menu_markup())
     except Exception as e:
-        print(e)
+        log_to_file(e)
         bot.reply_to(message, 'Ой, что-то пошло не так...')
         msg = bot.send_message(
             chat_id, '📅 Пожалуйста, напиши дату и время задачи.')
@@ -1603,7 +1624,7 @@ def process_file_step(message, task):
                     time_second = str(convert_timezone(
                         time_first, timezone_first, timezone_second))
                 except Exception as e:
-                    print(e)
+                    log_to_file(e)
                     time_second = task.deadline
 
                 bot.send_message(task.user_id,
@@ -1615,7 +1636,7 @@ def process_file_step(message, task):
                              reply_markup=main_menu_markup())
 
     except Exception as e:
-        print(e)
+        log_to_file(e)
         bot.reply_to(message, 'oooops')
 
 
@@ -1637,7 +1658,7 @@ def save_file_id(message, task):
                          reply_markup=main_menu_markup())
 
     except Exception as e:
-        print(e)
+        log_to_file(e)
         bot.reply_to(message, 'oooops')
 
 
@@ -1887,13 +1908,13 @@ def handle_task(message):
                         recurring_task = recurring_task.replace(day, "")
                     task_text = task_text.replace(recurring_task, '')
                     
-                print(task_text)
+                log_to_file(task_text)
                 date_str, task_date_str = check_date_in_message(task_text)
                 if date_str:
                     task.text = task_text.replace(date_str, "")
                 else:
                     task.text = task_text
-                print(task_date_str)
+                log_to_file(task_date_str)
                 
                 task.set_user_id_added(message.from_user.id)
 
@@ -1910,13 +1931,13 @@ def handle_task(message):
             bot.send_message(
                 message.from_user.id, f"К сожалению, я не могу найти @{username} в базе данных. Пожалуйста, войдите в {config.NAME} и выполните начальную настройку.")
     except Exception as e:
-        print(e)
+        log_to_file(e)
 
 
 def handle_date(message, task):
     date_str, task_date_str = check_date_in_message( str(task.text) + " " + str(message.text))
 
-    print(str(task.text) + " " + str(message.text), " / ", date_str, " / ", task_date_str)
+    log_to_file(str(task.text) + " " + str(message.text), " / ", date_str, " / ", task_date_str)
     
     # Если дата не найдена, просим пользователя указать ее еще раз
     if task_date_str:
@@ -2155,7 +2176,7 @@ def polling():
             bd.create_db()
             bot.polling(none_stop=True, interval=0, timeout=20)
         except Exception as e:
-            print(f"Ошибка: {e}. Перезапуск...")
+            log_to_file(f"Ошибка: {e}. Перезапуск...")
             continue
 
 
@@ -2167,10 +2188,8 @@ def send_task_notification():
             task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
 
             # Convert the deadline from the task's timezone to server's timezone
-            server_timezone = datetime.datetime.now(
-                pytz.timezone('UTC')).strftime('%Z')
-            converted_deadline = convert_timezone(
-                deadline, task_timezone, server_timezone)
+            server_timezone = datetime.datetime.now(pytz.timezone('UTC')).strftime('%Z')
+            converted_deadline = convert_timezone(deadline, task_timezone, server_timezone)
 
             markup = types.InlineKeyboardMarkup(row_width=2)
             one_hour = types.InlineKeyboardButton(
@@ -2196,14 +2215,14 @@ def send_task_notification():
             try:
                 bot.edit_message_reply_markup(chat_id=user_id, message_id=message_id, reply_markup=new_markup)
             except Exception as e:
-                print(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
+                log_to_file(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
 
 
 def create_new_recurring_task():
     while True:
         tasks = bd.get_done_recurring_tasks()
         for task in tasks:
-            print(task[0])
+            log_to_file(task[0])
             task_id, user_id, task_text, deadline, _, file_id, timezone, user_id_added, new_date = task
 
             if new_date.split()[0] == "на":
@@ -2270,8 +2289,8 @@ def send_daily_task_summary():
                 converted_time_datetime = datetime.datetime.strptime(
                     converted_time, "%Y-%m-%d %H:%M:%S")
 
-                print(converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25))
-                print(converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
+                log_to_file(converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25))
+                log_to_file(converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
                 if converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25):
                     view_tasks(None, status='pending', id=user_id)
 
@@ -2291,7 +2310,7 @@ def send_daily_task_summary():
                                 else:
                                     bot.send_message(user_id, f"Сегодня у {user_data[2]} день рождения! Исполняется {age} лет.")
             except Exception as e:
-                print("Утрений план: ERROR: send_daily_task_summary." + str(e))
+                log_to_file("Утрений план: ERROR: send_daily_task_summary." + str(e))
                 pass
 
             try:
@@ -2312,7 +2331,7 @@ def send_daily_task_summary():
                 if (converted_time_datetime - datetime.timedelta(seconds=25)).time() <= now.time() <= (converted_time_datetime + datetime.timedelta(seconds=25)).time():
                     task_done(user_id, page=0)
             except Exception as e:
-                print("Вечерений план: ERROR: send_daily_task_summary." + str(e))
+                log_to_file("Вечерений план: ERROR: send_daily_task_summary." + str(e))
                 pass
         time.sleep(60)
 
@@ -2324,7 +2343,7 @@ def send_task_notification_60s():
             try:
                 bot.edit_message_reply_markup(chat_id=user_id, message_id=message_id, reply_markup=new_markup)
             except Exception as e:
-                print(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
+                log_to_file(f"Couldn't update message {message_id} for user {user_id}. Error: {e}")
 
     messages_to_remove_markup = []
 
@@ -2341,7 +2360,7 @@ def send_task_notification_60s():
             now = datetime.datetime.now()
 
             # Check if the current time is within the required range
-            print(converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25), '------------', converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
+            log_to_file(converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25), '------------', converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
             if converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25):
                 markup = types.InlineKeyboardMarkup(row_width=2)
                 one_hour = types.InlineKeyboardButton("1 час", callback_data=f'deadline|1hour|{task_id}')
