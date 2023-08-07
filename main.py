@@ -2184,12 +2184,11 @@ def send_task_notification():
     while True:
         tasks = bd.get_due_tasks()
         messages_to_remove_markup = []
+        if not tasks:
+            log_to_file("send_task_notification: Нет задач")
         for task in tasks:
+            log_to_file(f"send_task_notification: {task}")
             task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
-
-            # Convert the deadline from the task's timezone to server's timezone
-            server_timezone = datetime.datetime.now(pytz.timezone('UTC')).strftime('%Z')
-            converted_deadline = convert_timezone(deadline, task_timezone, server_timezone)
 
             markup = types.InlineKeyboardMarkup(row_width=2)
             one_hour = types.InlineKeyboardButton(
@@ -2281,17 +2280,6 @@ def send_daily_task_summary():
                 converted_time_datetime = datetime.datetime.strptime(time_taks_1, "%Y-%m-%d %H:%M:%S")
                 now = datetime.datetime.now()
 
-
-                # # Конвертируем текущее время пользователя в часовой пояс сервера для проверки
-                # time_obj = datetime.datetime.strptime(time_taks_1, "%Y-%m-%d %H:%M:%S")
-                # user_timezone = timezone
-                # server_timezone = config.TIMEZONE
-                # converted_time = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), user_timezone, server_timezone)
-
-                # # Проверяем, нужно ли отправить обзор задач пользователю
-                # now = datetime.datetime.now()
-                # converted_time_datetime = datetime.datetime.strptime(converted_time, "%Y-%m-%d %H:%M:%S")
-
                 log_to_file('send_daily_task_summary (mor): ',converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25))
                 log_to_file('send_daily_task_summary (mor): ', converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
                 if converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25):
@@ -2317,17 +2305,6 @@ def send_daily_task_summary():
                 pass
 
             try:
-                # time_obj = datetime.datetime.strptime(
-                #     time_taks_2, "%Y-%m-%d %H:%M:%S")
-                # user_timezone = timezone
-                # server_timezone = config.TIMEZONE
-                # converted_time = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), user_timezone, server_timezone)
-
-                # # Проверяем, нужно ли отправить обзор задач пользователю
-                # now = datetime.datetime.now()
-                # converted_time_datetime = datetime.datetime.strptime(converted_time, "%Y-%m-%d %H:%M:%S")
-                # converted_time_datetime = converted_time_datetime.replace(year=now.year, month=now.month, day=now.day)
-
                 server_timezone = config.TIMEZONE
                 converted_time_datetime = datetime.datetime.strptime(time_taks_2, "%Y-%m-%d %H:%M:%S")
 
@@ -2381,6 +2358,7 @@ def send_task_notification_60s():
                 messages_to_remove_markup.append((user_id, msg.message_id))
 
         if messages_to_remove_markup:
+            log_to_file("send_task_notification_60s: ", ' '.join(messages_to_remove_markup))
             thread = threading.Thread(target=remove_markup_after_15, args=(messages_to_remove_markup,))
             thread.start()
 
