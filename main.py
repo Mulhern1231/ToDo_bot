@@ -2278,10 +2278,7 @@ def send_daily_task_summary():
             try:
 
                 server_timezone = config.TIMEZONE
-                time_obj = datetime.datetime.strptime(time_taks_1, "%Y-%m-%d %H:%M:%S")
-                converted_deadline = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), timezone, server_timezone)
-                converted_time_datetime = datetime.datetime.strptime(converted_deadline, "%Y-%m-%d %H:%M:%S")
-
+                converted_time_datetime = datetime.datetime.strptime(time_taks_1, "%Y-%m-%d %H:%M:%S")
                 now = datetime.datetime.now()
 
 
@@ -2332,9 +2329,7 @@ def send_daily_task_summary():
                 # converted_time_datetime = converted_time_datetime.replace(year=now.year, month=now.month, day=now.day)
 
                 server_timezone = config.TIMEZONE
-                time_obj = datetime.datetime.strptime(time_taks_2, "%Y-%m-%d %H:%M:%S")
-                converted_deadline = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), timezone, server_timezone)
-                converted_time_datetime = datetime.datetime.strptime(converted_deadline, "%Y-%m-%d %H:%M:%S")
+                converted_time_datetime = datetime.datetime.strptime(time_taks_2, "%Y-%m-%d %H:%M:%S")
 
                 now = datetime.datetime.now()
 
