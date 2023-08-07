@@ -2184,28 +2184,41 @@ def send_task_notification():
     while True:
         try:
             tasks = bd.get_due_tasks()
+
             messages_to_remove_markup = []
             if not tasks:
                 log_to_file("send_task_notification: Нет задач")
             for task in tasks:
-                log_to_file(f"send_task_notification: {task}")
                 task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
 
-                markup = types.InlineKeyboardMarkup(row_width=2)
-                one_hour = types.InlineKeyboardButton(
-                    "1 час", callback_data=f'deadline|1hour|{task_id}')
-                three_hours = types.InlineKeyboardButton(
-                    "3 часа", callback_data=f'deadline|3hours|{task_id}')
-                tomorrow = types.InlineKeyboardButton(
-                    "Завтра", callback_data=f'deadline|tmrw|{task_id}')
-                other_time = types.InlineKeyboardButton(
-                    "Другое время", callback_data=f'deadline|other|{task_id}')
-                done = types.InlineKeyboardButton(
-                    "✅ Готово", callback_data=f'deadline|done|{task_id}')
-                markup.add(one_hour, three_hours, tomorrow, other_time, done)
+                # Convert the deadline from the task's timezone to server's timezone
+                server_timezone = config.TIMEZONE
+                converted_deadline = convert_timezone(deadline, task_timezone, server_timezone)
+                converted_time_datetime = datetime.datetime.strptime(converted_deadline, "%Y-%m-%d %H:%M:%S")
 
-                msg = bot.send_message(user_id, f"🔥 {task_text}", reply_markup=markup)
-                messages_to_remove_markup.append((user_id, msg.message_id))
+                now = datetime.datetime.now()
+
+                # Check if the current time is within the required range
+                log_to_file("send_task_notification: ", converted_time_datetime, "------------", now, "------------", converted_time_datetime <= now )
+                if converted_time_datetime <= now :
+                    log_to_file(f"send_task_notification: {task}")
+                    task_id, user_id, task_text, deadline, _, _, task_timezone, _, _ = task
+
+                    markup = types.InlineKeyboardMarkup(row_width=2)
+                    one_hour = types.InlineKeyboardButton(
+                        "1 час", callback_data=f'deadline|1hour|{task_id}')
+                    three_hours = types.InlineKeyboardButton(
+                        "3 часа", callback_data=f'deadline|3hours|{task_id}')
+                    tomorrow = types.InlineKeyboardButton(
+                        "Завтра", callback_data=f'deadline|tmrw|{task_id}')
+                    other_time = types.InlineKeyboardButton(
+                        "Другое время", callback_data=f'deadline|other|{task_id}')
+                    done = types.InlineKeyboardButton(
+                        "✅ Готово", callback_data=f'deadline|done|{task_id}')
+                    markup.add(one_hour, three_hours, tomorrow, other_time, done)
+
+                    msg = bot.send_message(user_id, f"🔥 {task_text}", reply_markup=markup)
+                    messages_to_remove_markup.append((user_id, msg.message_id))
 
             time.sleep(900)
 
