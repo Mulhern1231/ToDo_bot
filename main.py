@@ -2276,15 +2276,24 @@ def send_daily_task_summary():
             user_id, _, _, _, _, timezone, time_taks_1, time_taks_2 = user
 
             try:
-                # Конвертируем текущее время пользователя в часовой пояс сервера для проверки
-                time_obj = datetime.datetime.strptime(time_taks_1, "%Y-%m-%d %H:%M:%S")
-                user_timezone = timezone
-                server_timezone = config.TIMEZONE
-                converted_time = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), user_timezone, server_timezone)
 
-                # Проверяем, нужно ли отправить обзор задач пользователю
+                server_timezone = config.TIMEZONE
+                time_obj = datetime.datetime.strptime(time_taks_1, "%Y-%m-%d %H:%M:%S")
+                converted_deadline = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), timezone, server_timezone)
+                converted_time_datetime = datetime.datetime.strptime(converted_deadline, "%Y-%m-%d %H:%M:%S")
+
                 now = datetime.datetime.now()
-                converted_time_datetime = datetime.datetime.strptime(converted_time, "%Y-%m-%d %H:%M:%S")
+
+
+                # # Конвертируем текущее время пользователя в часовой пояс сервера для проверки
+                # time_obj = datetime.datetime.strptime(time_taks_1, "%Y-%m-%d %H:%M:%S")
+                # user_timezone = timezone
+                # server_timezone = config.TIMEZONE
+                # converted_time = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), user_timezone, server_timezone)
+
+                # # Проверяем, нужно ли отправить обзор задач пользователю
+                # now = datetime.datetime.now()
+                # converted_time_datetime = datetime.datetime.strptime(converted_time, "%Y-%m-%d %H:%M:%S")
 
                 log_to_file('send_daily_task_summary (mor): ',converted_time_datetime - datetime.timedelta(seconds=25), "------------", now, "------------", converted_time_datetime + datetime.timedelta(seconds=25))
                 log_to_file('send_daily_task_summary (mor): ', converted_time_datetime - datetime.timedelta(seconds=25) <= now <= converted_time_datetime + datetime.timedelta(seconds=25))
@@ -2311,16 +2320,23 @@ def send_daily_task_summary():
                 pass
 
             try:
-                time_obj = datetime.datetime.strptime(
-                    time_taks_2, "%Y-%m-%d %H:%M:%S")
-                user_timezone = timezone
-                server_timezone = config.TIMEZONE
-                converted_time = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), user_timezone, server_timezone)
+                # time_obj = datetime.datetime.strptime(
+                #     time_taks_2, "%Y-%m-%d %H:%M:%S")
+                # user_timezone = timezone
+                # server_timezone = config.TIMEZONE
+                # converted_time = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), user_timezone, server_timezone)
 
-                # Проверяем, нужно ли отправить обзор задач пользователю
+                # # Проверяем, нужно ли отправить обзор задач пользователю
+                # now = datetime.datetime.now()
+                # converted_time_datetime = datetime.datetime.strptime(converted_time, "%Y-%m-%d %H:%M:%S")
+                # converted_time_datetime = converted_time_datetime.replace(year=now.year, month=now.month, day=now.day)
+
+                server_timezone = config.TIMEZONE
+                time_obj = datetime.datetime.strptime(time_taks_2, "%Y-%m-%d %H:%M:%S")
+                converted_deadline = convert_timezone(time_obj.strftime("%Y-%m-%d %H:%M:%S"), timezone, server_timezone)
+                converted_time_datetime = datetime.datetime.strptime(converted_deadline, "%Y-%m-%d %H:%M:%S")
+
                 now = datetime.datetime.now()
-                converted_time_datetime = datetime.datetime.strptime(converted_time, "%Y-%m-%d %H:%M:%S")
-                converted_time_datetime = converted_time_datetime.replace(year=now.year, month=now.month, day=now.day)
 
                 if (converted_time_datetime - datetime.timedelta(seconds=25)).time() <= now.time() <= (converted_time_datetime + datetime.timedelta(seconds=25)).time():
                     task_done(user_id, page=0)
