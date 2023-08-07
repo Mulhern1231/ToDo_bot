@@ -324,7 +324,7 @@ def get_due_tasks():
     conn = sqlite3.connect(bd_name)
     cursor = conn.cursor()
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute('SELECT * FROM tasks WHERE deadline <= ? AND status != "done"', (now,))
+    cursor.execute('SELECT * FROM tasks WHERE status != "done"')
     tasks = cursor.fetchall()
     conn.close()
     return tasks
